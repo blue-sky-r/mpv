@@ -6,7 +6,7 @@
 -- (see mpv doc for more details, lookup playlist/N/current, playlist/N/playing )
 -- To display correct stream2.title use this script.
 --
--- Place into ~/.config/mpv/scripts/ for autoload
+-- Place script into ~/.config/mpv/scripts/ for autoload
 --
 -- OSD options like duration, alignment, border, scale could be set in ~/.config/mpv/mpv.conf
 --
@@ -23,7 +23,7 @@
 
 -- defaults
 local cfg = {
-	format = "%N. %t",
+    format = "%N. %t",
     ignoreurl = true
 }
 

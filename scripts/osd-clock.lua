@@ -6,12 +6,12 @@
 --   interval ... how often to show OSD clock, either seconds or human friendly format like '1h 33m 5s' supported
 --   format   ... date format string
 --   duration ... how long [in seconds] OSD stays, fractional values supported
---   key      ... to bind showing OSD clock on request
+--   key      ... to bind showing OSD clock on request (false for no binding)
 --   name     ... symbolic name (can be used in input.conf, see mpv doc for details)
 --
--- To customize configuration place osd-clock.conf into ~/.config/mpv/lua-settings/ and edit.
+-- To customize configuration place osd-clock.conf into ~/.config/mpv/lua-settings/ and edit
 --
--- Place into ~/.config/mpv/scripts/ for autoload
+-- Place script into ~/.config/mpv/scripts/ for autoload
 --
 -- GitHub: https://github.com/blue-sky-r/mpv/tree/master/scripts
 
@@ -55,7 +55,7 @@ end
 options.read_options(cfg, 'osd-clock')
 
 -- log active config
-mp.msg.verbose('cfg='..utils.to_string(cfg))
+mp.msg.verbose('cfg = '..utils.to_string(cfg))
 
 -- OSD show clock
 local function osd_clock()
