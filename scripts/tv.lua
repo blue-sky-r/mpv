@@ -1,4 +1,4 @@
--- Simple script for configurable TV activation and/or deactivation on mpv playback
+-- Simple script for configurable TV out activation and/or deactivation on mpv playback
 --
 -- Intended to activate TV on mpv startup and deactivate TV on mpv close if TV is connected.
 -- The script executes fully configurable shell sequences (e.g. xrandr on linux)
