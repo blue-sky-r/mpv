@@ -1,6 +1,8 @@
 ## mpv scripts
 This repository contains Lua scripts for [mpv player](https://github.com/mpv-player/mpv "GitHub project") 
 
+Other mpv scripts can be found [here](https://github.com/mpv-player/mpv/wiki/User-Scripts "mpv scripts")
+
 These are small and usefull improvements for mpv for iPTV live stream watching:
 * [Show Stream Title](scripts/show-stream-title.lua) - shows OSD channel title when switching the channels
 * [OSD Clock](scripts/osd-clock.lua) - shows periodically OSD clock
