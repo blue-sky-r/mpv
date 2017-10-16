@@ -31,46 +31,12 @@ options.read_options(cfg, 'channel-by-name')
 -- log active config
 mp.msg.verbose('cfg = '..utils.to_string(cfg))
 
--- set helper function based on cfg.match
-local function cfg_set_fn()
-    local m = cfg.match
-    -- case sensitivity
-    if m:find('s') then cfg.case_fn = case_insensitive end
-    if m:find('S') then cfg.case_fn = case_sensitive end
-    --
-    m = m:lower()
-    -- match
-    if m == 's' then cfg.match_fn = str_match end
-    -- substring
-    if m == '*s*' then cfg.match_fn = str_in end
-    -- starts with
-    if m == 's*' then cfg.match_fn = str_startswith end
-    -- ands with
-    if m == '*s' then cfg.match_fn = str_endswith end
+local function match_case_insensitive()
+    return cfg.match:find("s")
 end
 
-local function case_sensitive(str)
-    return str
-end
-
-local function case_insensitive(str)
-    return str:lower()
-end
-
-local function str_match(str, needle)
-    return str == needle
-end
-
-local function str_in(str, needle)
-    return str:find(needle)
-end
-
-local function str_startswith(str, needle)
-    return str:sub(1, needle:len()) == needle
-end
-
-local function str_endswith(str, needle)
-    return str:sub(-needle:len()) == needle
+local function match_pattern(str)
+    return "^"..cfg.match:gsub("*", ".*"):gsub("[Ss]",str).."$"
 end
 
 -- channel name to number lookup
@@ -98,9 +64,9 @@ local function create_playlist_dict()
         mp.msg.info("playlist key("..plnum..") -> val("..utils.to_string(plval)..")")
         local chname = title2name(plval.title)
         -- adjust case
-        local achname = cfg.case_fn(chname)
+        if match_case_insensitive() then chname = chname:lower()
         -- add to dictionary
-        table.insert(chan_name2num, {[achname] = plnum})
+        table.insert(chan_name2num, {[chname] = plnum})
     end
 
     mp.msg.verbose("lookup -> ".. utils.to_string(chan_name2num))
@@ -108,8 +74,9 @@ end
 
 local function lookup_name2num(name)
     -- lookup name to playlist-pos-1
+    local pattern = match_pattern(name)
     for chname,chnum in ipairs(chan_name2num) do
-        if cfg.match_fn(chname, name) then
+        if chname:match(pattern) then
             return chnum
         end
     end
@@ -118,9 +85,9 @@ end
 -- set channel by name
 local function channel(name)
     -- adjust case
-    local aname = cfg.case_fn(name)
+    if match_case_insensitive() name = name:lower()
     -- lookup playlist position
-    local pos1 = lookup_name2num(aname)
+    local pos1 = lookup_name2num(name)
     --
     mp.msg.verbose("channel:".. name .." -> ".. pos1)
     -- set playlist-pos-1
