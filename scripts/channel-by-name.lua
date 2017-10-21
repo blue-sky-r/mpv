@@ -6,17 +6,39 @@
 -- To change this template use File | Settings | File Templates.
 --
 
--- input.conf
+-- Script for user friendly selection of the iPTV channel by name
+--
+-- Intended to swicth iPTV playlist channels by name (string) and not by playlist posiition (number)
+-- Playlist channel position might change on each playlist update or/and modification.
+-- Instead of always keeping playlist and input.conf synchronized
+-- otherwise you have to modify input.conf an each playlist change
+-- but you want to switch to channel name and not to remomber floating channel number
+-- The script builds up local lookup table (dictionary) channel_name -> channel_number (playlist position)
+-- Can also be used for activating ambient lighting while watching etc ...
+--
+-- Configurable options:
+--   match   ... glob style pattern to match channel name (default case insensitive substring "*s*")
+--               token "s" represents channel name string (see bellow for more glob patterns)
+--   refresh ... autirefresh playlist on each channel change (default false)
+--
+-- To customize configuration place channel-by-name.conf into ~/.config/mpv/lua-settings/ and edit
+--
+-- Place script into ~/.config/mpv/scripts/ for autoload
+--
+-- GitHub: https://github.com/blue-sky-r/mpv/tree/master/scripts
+
+-- input.conf excerpt
 -- # key to channel name assignment
 -- c script-message-to channel_by_name channel CNN
 -- d script-message-to channel_by_name channel Discovery
 
-
+--
 local options = require("mp.options")
 local utils   = require("mp.utils")
 
 -- defaults
 local cfg = {
+    -- Glob patterns for matching:
     -- *s* ... case insensitive substring
     -- *s  ... case insensitive endswith
     -- s*  ... case insensitive startswith
