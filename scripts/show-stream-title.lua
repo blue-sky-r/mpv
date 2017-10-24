@@ -27,7 +27,7 @@ local cfg = {
     ignoreurl = true
 }
 
--- quick check if string s is like url
+-- quick check if string s looks like url
 local function likeurl(s)
     return string.match(s, "^%a%a%a+://%w+")
 end
