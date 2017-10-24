@@ -23,17 +23,13 @@
 
 -- defaults
 local cfg = {
-    -- OSD text format
     format = "%N. %t",
-    -- validate title from playlist
-    valid  = "%w+,,0$"
+    ignoreurl = true
 }
 
--- check if string is valid title by cfg.valid pattern
--- valid:   'CP24,,0', 'TA News,,0'
--- invalid: 'index', 'DVR', 'iptv-streams.m3u8', 'rtmp://ip'
-local function is_valid_title(s)
-    return string.match(s, cfg.valid)
+-- quick check if string s is like url
+local function likeurl(s)
+    return string.match(s, "^%a%a%a+://%w+")
 end
 
 -- [show_stream_title] property 'media-title' changed to 'iptv-streams.m3u8'
@@ -45,15 +41,12 @@ end
 -- [show_stream_title] property 'media-title' changed to 'EDU,:/default-theme/openfolder.png,1'
 -- [show_stream_title] property 'media-title' changed to 'History,,0'
 --
--- [cplayer] Set property: file-local-options/force-media-title="index" -> 1
--- [show_stream_title] property 'media-title' changed to 'index'
---
 mp.observe_property("media-title", "string",
     function(name, val)
         -- log
         mp.msg.info("property '"..name.."' changed to '"..val.."'")
         -- val can be url (redirects ?)
-        if not is_valid_title(val) then return end
+        if cfg.ignoreurl and likeurl(val) then return end
 
         -- SMPlayer playlist val = 'Title,,0'
         --          playlist val = 'Title'
