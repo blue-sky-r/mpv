@@ -11,7 +11,7 @@ Other user mpv scripts can be found in [mpv-wiki-user-scripts](https://github.co
 For iPTV mode the playlist is used as an iPTV channel list. Each playlist entry corresponds to one iptv stream and so to one iPTV channel. 
 Switching channels is then just moving through playlist up or down.
 
-These are small and usefull improvements for mpv for iPTV live stream watching:
+These are small and usefull improvements for mpv iPTV mode live stream watching:
 * [Show Stream Title](scripts/show-stream-title.lua) - shows OSD channel title when switching the channels
 * [OSD Clock](scripts/osd-clock.lua) - shows periodically OSD clock
 * [TV out](scripts/tv.lua) - TV out activation/deactivation on mpv playback
