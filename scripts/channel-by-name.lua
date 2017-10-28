@@ -1,25 +1,17 @@
---
--- Created by IntelliJ IDEA.
--- User: robert
--- Date: 15.10.2017
--- Time: 1:05
--- To change this template use File | Settings | File Templates.
---
-
--- Script for user friendly selection of the iPTV channel by name
+-- Script for user friendly selection of the iPTV channel by name/title
 --
 -- Intended to swicth iPTV playlist channels by name (string) and not by playlist posiition (number)
--- Playlist channel position might change on each playlist update or/and modification.
--- Instead of always keeping playlist and input.conf synchronized
--- otherwise you have to modify input.conf an each playlist change
--- but you want to switch to channel name and not to remomber floating channel number
+--
+-- Playlist channel position might change on each playlist update or/and any modification.
+-- Instead of always keeping playlist and input.conf synchronized we can select channel by name (title)
+-- and let the script to find correct position in the playlist and switch to required stream.
 -- The script builds up local lookup table (dictionary) channel_name -> channel_number (playlist position)
--- Can also be used for activating ambient lighting while watching etc ...
+-- Can also be used for alternate way to switch channels like voice recognition etc.
 --
 -- Configurable options:
---   match   ... glob style pattern to match channel name (default case insensitive substring "*s*")
+--   match   ... glob style pattern to match channel name (default is case insensitive substring "*s*")
 --               token "s" represents channel name string (see bellow for more glob patterns)
---   refresh ... autirefresh playlist on each channel change (default false)
+--   refresh ... autorefresh playlist on each channel change (default false)
 --
 -- To customize configuration place channel-by-name.conf into ~/.config/mpv/lua-settings/ and edit
 --
@@ -32,7 +24,7 @@
 -- c script-message-to channel_by_name channel CNN
 -- d script-message-to channel_by_name channel Discovery
 
---
+-- includes
 local options = require("mp.options")
 local utils   = require("mp.utils")
 
@@ -52,19 +44,21 @@ local cfg = {
     refresh  = false
 }
 
--- read lua-settings/channel-by-name.conf
+-- read optional lua-settings/channel-by-name.conf
 options.read_options(cfg, 'channel-by-name')
 
 -- log active config
 mp.msg.verbose('cfg = '..utils.to_string(cfg))
 
+-- true if channel matching is case insensitive
 local function match_case_insensitive()
     return cfg.match:find("s")
 end
 
+-- cache match case sensitivity
 local case_insensitive = match_case_insensitive()
 
--- escape special chars
+-- escape special pattern chars
 local function escape(str)
   local esc = {
     ["("] = "%%(",
@@ -80,13 +74,15 @@ local function escape(str)
   return str:gsub(".", esc)
 end
 
+-- pattern to match channel name
 local function match_pattern(str)
     return "^"..cfg.match:gsub("%*", ".*"):gsub("[Ss]", escape(str)).."$"
 end
 
--- channel name to number lookup
+-- channel name to number table/dictionary
 local chan_name2num = {}
 
+-- lookup channel number by channel name
 local function lookup_name2num(name)
     -- lookup name to playlist-pos-1
     local pattern = match_pattern(name)
