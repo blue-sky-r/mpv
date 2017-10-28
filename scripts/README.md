@@ -15,6 +15,24 @@ Files:
 * [channel-by-name.lua](channel-by-name.lua) - Lua script
 * [channel-by-name.conf](channel-by-name.conf) - default config as template for user config
 
+Example:
+
+`Assign channel "CBC News" to RC button "0"`
+
+* copy channel-by-name.lua to your `scripts/` directory
+* add following line to `input.conf` file:
+
+    `0 script-message-to channel_by_name channel "CBC News"`
+
+* make sure there is "CBC News" in the `playlist` file like:
+
+    `#EXTINF:0,CBC News,,0`
+    `https://nn.geo.cbc.ca/hls/cbc-1080.m3u8`
+    
+* now on any "0" keypress on RC the channel "CBC News" will start playing no matter where it is located (which index does it have)
+
+* now you can label key "0" on RC as "CBC News" 
+
 ### [OSD Clock](osd-clock.lua)
 
 Periodically shows OSD clock with many configurable options 
@@ -34,6 +52,9 @@ Files:
 ### [TV](tv.lua)
 
 Activate TV out on mpv player startup and deactivate TV out on mpv player shutdown. 
+The script executes fully configurable shell sequences (e.g. xrandr on linux). The scripts
+are conditionaly executed based on the result of "test" script. This way the TV out is not activated
+in case of disconnected TV etc. The scripts can be used also for activating ambient lighting while watching TV etc ...
 
 Files:
 * [tv.lua](tv.lua) - Lua script
