@@ -77,6 +77,5 @@ Files:
 * [tv.lua](tv.lua) - Lua script
 * [tv.conf](tv.conf) - default config as template for user config
 
-
 **keywords**: mpv, lua, script
 
