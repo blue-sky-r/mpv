@@ -52,6 +52,7 @@ Files:
 ### [Show Stream Title](show-stream-title.lua)
 
 Shows OSD stream title defined in the playlist on stream change
+
 Configurable options:    
 * format ... OSD text format 9default "%N. %t")
 * valid  ... validate title from playlist (default "%w+,,0$")
@@ -66,6 +67,11 @@ Activate TV out on mpv player startup and deactivate TV out on mpv player shutdo
 The script executes fully configurable shell sequences (e.g. xrandr on linux). The scripts
 are conditionaly executed based on the result of "test" script. This way the TV out is not activated
 in case of disconnected TV etc. The scripts can be used also for activating ambient lighting while watching TV etc ...
+
+Configurable options:
+* test ... check if TV is connected (result is non empty, exitcode 0; default "xrandr | grep 'VGA1 connected'")
+* on   ... executed once on mpv player startup  (TV ON;  default 'xrandr --output LVDS1 --off && xrandr --output VGA1 --mode 720x400 --output TV1 --auto')
+* off  ... executed once on mpv player shutdown (TV OFF; default 'xrandr --output LVDS1 --auto')
 
 Files:
 * [tv.lua](tv.lua) - Lua script
