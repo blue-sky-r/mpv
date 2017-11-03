@@ -38,7 +38,12 @@ does it have)
 
 ### [OSD Clock](osd-clock.lua)
 
-Periodically shows OSD clock with many configurable options 
+Periodically shows OSD clock with many configurable options:
+* interval ... how often to show OSD clock, either seconds or human friendly format like '1h 33m 5s' is supported
+* format   ... date format string
+* duration ... how long [in seconds] OSD stays, fractional values supported
+* key      ... to bind showing OSD clock on request (false for no binding)
+* name     ... symbolic name (can be used in input.conf, see mpv doc for details)
 
 Files:
 * [osd-clock.lua](osd-clock.lua) - Lua script
