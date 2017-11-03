@@ -51,7 +51,10 @@ Files:
 
 ### [Show Stream Title](show-stream-title.lua)
 
-Shows OSD stream title defined in the playlist on stream change 
+Shows OSD stream title defined in the playlist on stream change
+Configurable options:    
+* format ... OSD text format 9default "%N. %t")
+* valid  ... validate title from playlist (default "%w+,,0$")
 
 Files:
 * [show-stream-title.lua](osd-clock.lua) - Lua script
