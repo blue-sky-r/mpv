@@ -15,26 +15,27 @@ Files:
 * [channel-by-name.lua](channel-by-name.lua) - Lua script
 * [channel-by-name.conf](channel-by-name.conf) - default config as template for user config
 
-Example `Assign iPTV channel "CBC News" to RC button "0"`
+Example `Assign iPTV channel "CBC News" to the RC (remote controller) button "0"`
 
 * copy channel-by-name.lua to your `scripts/` directory
-* add following line to `input.conf` file:
+* add following line to the `input.conf` file:
 
     ```
     0 script-message-to channel_by_name channel "CBC News"
     ```
 
-* make sure there is "CBC News" in the `playlist` file like:
+* make sure there is a "CBC News" entry in the `playlist` file, something like:
 
     ```
     #EXTINF:0,CBC News,,0
     https://nn.geo.cbc.ca/hls/cbc-1080.m3u8
     ```
     
-* now on any "0" keypress on RC the channel "CBC News" will start playing no matter where it is located (which index/position
-does it have)
+* from now on the "0" keypress on the RC the channel "CBC News" will start playing no matter where in the playlist it is located 
+(which index/position does it have)
 
-* now you can label key "0" on RC as "CBC News" 
+* now you can label the key "0" on the RC as "CBC News" and on update or modify of the playlist and key "0" will stay assigned 
+to the channel "CBC News"
 
 ### [OSD Clock](osd-clock.lua)
 
@@ -51,11 +52,13 @@ Files:
 
 ### [Show Stream Title](show-stream-title.lua)
 
-Shows OSD stream title defined in the playlist on stream change
+Shows OSD stream title defined in the playlist on stream change. However, the `media-title` property
+gets updated more frequently then the stream changes. Therefore it is important to filter out unwanted updates
+which is implemented by configurable validation pattern `valid`
 
 Configurable options:    
 * format ... OSD text format (default "%N. %t")
-* valid  ... validate title from playlist, ignore invalid title (default "%w+,,0$")
+* valid  ... validate title from playlist, ignore invalid title changes (default "%w+,,0$")
 
 Files:
 * [show-stream-title.lua](osd-clock.lua) - Lua script
