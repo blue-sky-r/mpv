@@ -34,7 +34,7 @@ Example `Assign iPTV channel "CBC News" to the RC (remote controller) button "0"
 * from now on the "0" keypress on the RC the channel "CBC News" will start playing no matter where in the playlist it is located 
 (which index/position does it have)
 
-* now you can label the key "0" on the RC as "CBC News" and on update or modify of the playlist and key "0" will stay assigned 
+* now you can label the key "0" on the RC as "CBC News" and on update or modify of the playlist the key "0" will stay assigned 
 to the channel "CBC News"
 
 ### [OSD Clock](osd-clock.lua)
