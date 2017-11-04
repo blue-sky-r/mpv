@@ -25,7 +25,7 @@
 local cfg = {
     -- OSD text format
     format = "%N. %t",
-    -- validate title from playlist (empty for valid all)
+    -- validate title from playlist (empty for passthrough = valid all)
     valid  = "%w+,,0$"
 }
 
@@ -33,7 +33,7 @@ local cfg = {
 -- valid:   'CP24,,0', 'TA News,,0'
 -- invalid: 'index', 'DVR', 'iptv-streams.m3u8', 'rtmp://ip'
 local function is_valid_title(s)
-    -- everything is valid if validation pattern is missing
+    -- everything is valid (passthrough) if validation pattern is missing
     if not cfg.valid then return true end
     -- validate with pattern
     return string.match(s, cfg.valid)
