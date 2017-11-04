@@ -54,8 +54,8 @@ Files:
 Shows OSD stream title defined in the playlist on stream change
 
 Configurable options:    
-* format ... OSD text format 9default "%N. %t")
-* valid  ... validate title from playlist (default "%w+,,0$")
+* format ... OSD text format (default "%N. %t")
+* valid  ... validate title from playlist, ignore invalid title (default "%w+,,0$")
 
 Files:
 * [show-stream-title.lua](osd-clock.lua) - Lua script
@@ -69,7 +69,7 @@ are conditionaly executed based on the result of "test" script. This way the TV 
 in case of disconnected TV etc. The scripts can be used also for activating ambient lighting while watching TV etc ...
 
 Configurable options:
-* test ... check if TV is connected (result is non empty, exitcode 0; default "xrandr | grep 'VGA1 connected'")
+* test ... check if TV is connected (iest if result is non empty, exitcode 0; default "xrandr | grep 'VGA1 connected'")
 * on   ... executed once on mpv player startup  (TV ON;  default 'xrandr --output LVDS1 --off && xrandr --output VGA1 --mode 720x400 --output TV1 --auto')
 * off  ... executed once on mpv player shutdown (TV OFF; default 'xrandr --output LVDS1 --auto')
 
