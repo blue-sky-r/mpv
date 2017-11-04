@@ -4,7 +4,12 @@
 --
 -- At the moment of jump from stream1 to stream2 the property 'media-title' still contains stream1.title
 -- (see mpv doc for more details, lookup playlist/N/current, playlist/N/playing )
--- To display correct stream2.title use this script.
+-- To display correct stream2.title from playlist use this script.
+--
+-- Note: 'media-title' property gets updated more often then switching channels.
+--  Therefore the script has to validate the 'media-title', It is omplemented
+--  by 'media-title' matching to cfg.valid pattern. The empty cfg.valid activates
+--  'passthrough' mode (all 'media-title' changes are valid and shown)
 --
 -- Place script into ~/.config/mpv/scripts/ for autoload
 --
