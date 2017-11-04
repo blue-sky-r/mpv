@@ -54,11 +54,11 @@ Files:
 
 Shows OSD stream title defined in the playlist on stream change. However, the `media-title` property
 gets updated more frequently then the stream changes. Therefore it is important to filter out unwanted updates
-which is implemented by configurable validation pattern `valid`
+which is implemented by configurable validation pattern `valid
 
 Configurable options:    
 * format ... OSD text format (default "%N. %t")
-* valid  ... validate title from playlist, ignore invalid title changes (default "%w+,,0$")
+* valid  ... validate the title from playlist, ignore invalid title changes (empty for valid all, default "%w+,,0$")
 
 Files:
 * [show-stream-title.lua](osd-clock.lua) - Lua script
