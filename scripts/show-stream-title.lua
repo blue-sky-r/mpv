@@ -7,9 +7,10 @@
 -- To display correct stream2.title from playlist use this script.
 --
 -- Note: 'media-title' property gets updated more often then switching channels.
---  Therefore the script has to validate the 'media-title', It is omplemented
---  by 'media-title' matching to cfg.valid pattern. The empty cfg.valid activates
---  'passthrough' mode (all 'media-title' changes are valid and shown)
+-- Therefore the script has to validate the 'media-title', It is omplemented
+-- by 'media-title' matching to cfg.valid pattern. The empty cfg.valid activates
+-- 'passthrough' mode (all 'media-title' changes are valid and shown). The default
+-- cfg.valid pattern should be OK, actually is based on SMPlayer fromatted playlist
 --
 -- Place script into ~/.config/mpv/scripts/ for autoload
 --
