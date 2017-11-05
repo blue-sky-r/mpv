@@ -40,12 +40,17 @@ to the channel "CBC News"
 ### [OSD Clock](osd-clock.lua)
 
 Periodically shows OSD clock with many configurable options:
-* interval ... how often to show OSD clock, either seconds or human friendly format like '1h 33m 5s' is supported
-* format   ... date format string
-* duration ... how long [in seconds] OSD stays, fractional values supported
-* key      ... to bind showing OSD clock on request (false for no binding)
-* name     ... symbolic name (can be used in input.conf, see mpv doc for details)
+* interval ... how often to show OSD clock, either seconds or human friendly format like '1h 33m 5s' is supported (default '15m')
+* format   ... date format string (default "%H:%M")
+* duration ... how long [in seconds] OSD stays, fractional values supported (default 1.2)
+* key      ... to bind showing OSD clock on request (false for no binding; default 'h')
+* name     ... symbolic name (can be used in input.conf, see mpv doc for details; default 'show-clock')
 
+There is an implemented logic to start nicely at interval boundary, for example:
+    
+    interval='10m' wil dipslay OSD clock at 10,20,30,40,50,00
+    interval='15m' wil dipslay OSD clock at 15,30,45,00
+    
 Files:
 * [osd-clock.lua](osd-clock.lua) - Lua script
 * [osd-clock.conf](osd-clock.conf) - default config as template for user config
@@ -54,7 +59,7 @@ Files:
 
 Shows OSD stream title defined in the playlist on stream change. However, the `media-title` property
 gets updated more frequently then the stream changes. Therefore it is important to filter out unwanted updates
-which is implemented by configurable validation pattern `valid
+which is implemented by configurable validation pattern `valid` (default pattern based on SMPlayer playlist format)
 
 Configurable options:    
 * format ... OSD text format (default "%N. %t")
@@ -69,10 +74,10 @@ Files:
 Activate TV out on mpv player startup and deactivate TV out on mpv player shutdown. 
 The script executes fully configurable shell sequences (e.g. xrandr on linux). The scripts
 are conditionaly executed based on the result of "test" script. This way the TV out is not activated
-in case of disconnected TV etc. The scripts can be used also for activating ambient lighting while watching TV etc ...
+in the case of disconnected TV etc. The scripts can also be used for activating ambient lighting while watching TV etc ...
 
 Configurable options:
-* test ... check if TV is connected (iest if result is non empty, exitcode 0; default "xrandr | grep 'VGA1 connected'")
+* test ... check if TV is connected (test if result is non empty, exitcode 0; default "xrandr | grep 'VGA1 connected'")
 * on   ... executed once on mpv player startup  (TV ON;  default 'xrandr --output LVDS1 --off && xrandr --output VGA1 --mode 720x400 --output TV1 --auto')
 * off  ... executed once on mpv player shutdown (TV OFF; default 'xrandr --output LVDS1 --auto')
 
