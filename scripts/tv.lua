@@ -12,7 +12,7 @@
 --   on   ... executed once on mpv player startup  (TV ON)
 --   off  ... executed once on mpv player shutdown (TV OFF)
 -- 
--- Note: xrandr seems to have problem turning off and on devices on sigle execution.
+-- Note: xrandr seems to have problem turning off and on devices on single execution.
 -- Therefore it is wise to split execution to multiple commands, for example:
 --   problem : xrandr --output LVDS1 --off --output TV1 --auto
 --   works ok: xrandr --output LVDS1 --off && xrandr --output TV1 --auto
