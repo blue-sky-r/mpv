@@ -6,7 +6,7 @@
 --   interval ... how often to show OSD clock, either seconds or human friendly format like '1h 33m 5s' is supported (default '15m')
 --   format   ... date format string (default "%H:%M")
 --   duration ... how long [in seconds] OSD stays, fractional values supported (default 1.2)
---   key      ... to bind showing OSD clock on request (false for no binding; default 'h')
+--   key      ... to bind show OSD clock on request (false for no binding; default 'h' key)
 --   name     ... symbolic name (can be used in input.conf, see mpv doc for details; default 'show-clock')
 --
 -- To customize configuration place osd-clock.conf into ~/.config/mpv/lua-settings/ and edit
