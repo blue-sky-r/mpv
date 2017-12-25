@@ -4,7 +4,13 @@
 --
 -- At the moment of jump from stream1 to stream2 the property 'media-title' still contains stream1.title
 -- (see mpv doc for more details, lookup playlist/N/current, playlist/N/playing )
--- To display correct stream2.title use this script.
+-- To display correct stream2.title from playlist use this script.
+--
+-- Note: 'media-title' property gets updated more often then switching channels.
+-- Therefore the script has to validate the 'media-title', It is omplemented
+-- by 'media-title' matching to cfg.valid pattern. The empty cfg.valid activates
+-- 'passthrough' mode (all 'media-title' changes are valid and shown). The default
+-- cfg.valid pattern should be OK, actually is based on SMPlayer fromatted playlist
 --
 -- Place script into ~/.config/mpv/scripts/ for autoload
 --
@@ -25,7 +31,7 @@
 local cfg = {
     -- OSD text format
     format = "%N. %t",
-    -- validate title from playlist
+    -- validate title from playlist (empty for passthrough = valid all)
     valid  = "%w+,,0$"
 }
 
@@ -33,6 +39,9 @@ local cfg = {
 -- valid:   'CP24,,0', 'TA News,,0'
 -- invalid: 'index', 'DVR', 'iptv-streams.m3u8', 'rtmp://ip'
 local function is_valid_title(s)
+    -- everything is valid (passthrough) if validation pattern is missing
+    if not cfg.valid then return true end
+    -- validate with pattern
     return string.match(s, cfg.valid)
 end
 
