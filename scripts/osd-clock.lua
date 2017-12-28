@@ -22,7 +22,7 @@ local utils   = require("mp.utils")
 local cfg = {
 	interval = '15m',
 	format   = "%H:%M",
-	duration = 1.2,
+	duration = 2.5,
 	key      = 'h',
 	name     = 'show-clock'
 }
@@ -51,7 +51,7 @@ local function aligned_timeout(align)
 	return atout
 end
 
--- read lua-settings/osd.conf
+-- read lua-settings/osd-clock.conf
 options.read_options(cfg, 'osd-clock')
 
 -- log active config
