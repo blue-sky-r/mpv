@@ -177,20 +177,6 @@ local function osd_email_msg(cfg)
     return string.format(cfg.osderr, rs)
 end
 
--- OSD - show email status
-function osd_email()
-    local msg = osd_email_msg(cfg['osd-email'])
-    if msg then
-    	mp.osd_message(msg, cfg['osd-email'].duration)
-    end
-end
-
--- OSD - show clock
-function osd_clock()
-	local s = os.date(cfg['osd-clock'].format)
-	mp.osd_message(s, cfg['osd-clock'].duration)
-end
-
 -- init timer, startup delay, key binding for specific modality from cfg
 local function setup_modality(modality)
 
@@ -246,6 +232,25 @@ local function setup_modality(modality)
     end
 end
 
+-- following osd_xxx functions have to be in global namespace _G[]
+
+-- OSD - show email status
+function osd_email()
+    local msg = osd_email_msg(cfg['osd-email'])
+    if msg then
+    	mp.osd_message(msg, cfg['osd-email'].duration)
+    end
+end
+
+-- OSD - show clock
+function osd_clock()
+	local s = os.date(cfg['osd-clock'].format)
+	mp.osd_message(s, cfg['osd-clock'].duration)
+end
+
 -- main --
+
+-- OSD-CLOCK
 setup_modality('osd-clock')
+-- OSD-EMAIL
 setup_modality('osd-email')
