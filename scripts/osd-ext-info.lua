@@ -1,16 +1,45 @@
--- OSD Show External Info
+-- OSD Show External Info (info not related to mpv player or media played)
 --
--- Shows OSD various external (mot mpv/media related) info like weather forecast, new emails,
+-- Shows OSD various external info (modality) like weather forecast, new emails,
 -- traffic conditions, currency exchange rates, clock, etc.
--- OSD options like duration, alignment, border, scale could be set in ~/.config/mpv/mpv.conf
--- OSD-clock configurable options:
+--
+-- Modalities currently (dec'17) supported (stay tuned as more modalities will be added later):
+--
+-- OSD-CLOCK - shows clock periodicaly - configurable options:
 --   interval ... how often to show OSD clock, either seconds or human friendly format like '1h 33m 5s' supported
 --   format   ... date format string
---   duration ... how long [in seconds] OSD stays, fractional values supported
+--   duration ... how long [in seconds] OSD msg stays, fractional values supported
 --   key      ... to bind showing OSD clock on request (false for no binding)
---   name     ... symbolic name (can be used in input.conf, see mpv doc for details)
 --
 -- To customize configuration place osd-clock.conf into ~/.config/mpv/lua-settings/ and edit
+--
+-- OSD-EMAIL - shows new email count periodically - configurable options:
+--   url      ... url to connect to imap/pop server
+--   userpass ... authentication in login:password format
+--   request  ... request to send to get new email count
+--   response ... response from email server to parse to get raw new email count
+--   cntofs   ... offset compensation of unread email count (will be subtracted before evaluatimg, should be 0)
+--   showat   ... at what time to show OSD email status, seconds or human friendly format like '33m 5s' supported
+--   interval ... how often to show OSD email status, either seconds or human friendly format like '1h 33m 5s' supported
+--   osdpos   ... msg shown if count os new emails is positive (you have xx new emails)
+--   osdneg   ... msg shown if count of new emails is negative (warning: fix offset cfg.cntofs)
+--   osdzero  ... msg shown if count of new emails is equal zero (no new emails)
+--   osderr   ... error message shown in case of any curl error
+--   duration ... how long [in seconds] OSD msg stays, fractional values supported
+--   key      ... to bind showing OSD email count on request (false for no binding)
+--
+--   https://debian-administration.org/article/726/Performing_IMAP_queries_via_curl
+--   http://www.faqs.org/rfcs/rfc2060.html
+--
+--   curl --user "login:password" --url "imap://imap.domain" --request "STATUS INBOX (UNSEEN)"
+--   * STATUS "INBOX" (UNSEEN 122)
+--
+--   curl --user "login:password" --url "imap://imap.domain/INBOX" --request 'SEARCH NEW FROM "vip@company.com"'
+--   * SEARCH
+--   * SEARCH 304 318 342 360 372
+--
+-- To customize configuration place osd-email.conf into ~/.config/mpv/lua-settings/ and edit
+--
 --
 -- Place script into ~/.config/mpv/scripts/ for autoload
 --
@@ -19,18 +48,15 @@
 local options = require("mp.options")
 local utils   = require("mp.utils")
 
--- https://debian-administration.org/article/726/Performing_IMAP_queries_via_curl
--- http://www.faqs.org/rfcs/rfc2060.html
-
--- curl --user "login:password" --url "imap://imap.domain" --request "STATUS INBOX (UNSEEN)"
--- * STATUS "INBOX" (UNSEEN 122)
-
--- curl --user "login:password" --url "imap://imap.domain/INBOX" --request 'SEARCH NEW FROM "vip@company.com"'
--- * SEARCH
--- * SEARCH 304 318 342 360 372
-
--- defaults
+-- defaults per modality
 local cfg = {
+
+    ['osd-clock'] = {
+	    interval = '15m',
+	    format   = "%H:%M",
+	    duration = 2.5,
+	    key      = 'h'
+    },
 
     ['osd-email'] = {
         url      = 'imap://imap.domain',
@@ -52,7 +78,7 @@ local cfg = {
         showat   = '55',
         interval = '1h',
         format   = 'Today: %d Tomorrow: %s',
-        duration = 3.5,
+        duration = 5.5,
         key      = 'w'
     }
 }
@@ -77,10 +103,21 @@ end
 -- calc aligned timeout in sec
 local function aligned_timeout(align)
     -- special case align=0 => align=60*60 [1h]
-    if align == 0 then align = 60*60 end
+    -- if align == 0 then align = 60*60 end
 	local time = os.time()
 	local atout = align * math.ceil(time / align) - time
 	return atout
+end
+
+-- calc delay till next ts
+local function timeout_till(ts)
+    -- current min/sec in seconds
+    local curminsec = os.time() % 3600
+    -- calc delay
+    local delay = ts - curminsec
+    -- next hour if delay is negative
+    if delay < 0 then delay = 3600 + delay end
+    return delay
 end
 
 -- string v is empty
@@ -140,12 +177,18 @@ local function osd_email_msg(cfg)
     return string.format(cfg.osderr, rs)
 end
 
--- show osd email status
+-- OSD - show email status
 function osd_email()
     local msg = osd_email_msg(cfg['osd-email'])
     if msg then
     	mp.osd_message(msg, cfg['osd-email'].duration)
     end
+end
+
+-- OSD - show clock
+function osd_clock()
+	local s = os.date(cfg['osd-clock'].format)
+	mp.osd_message(s, cfg['osd-clock'].duration)
 end
 
 -- init timer, startup delay, key binding for specific modality from cfg
@@ -172,13 +215,16 @@ local function setup_modality(modality)
         local osd_timer = mp.add_periodic_timer( htime2sec(conf.interval), osd)
         osd_timer:stop()
 
-        -- startup delay boundary (default interval)
-        local boundary = conf.interval
-        -- use optional showat as boundary if specified
-        if conf.showat then boundary = conf.showat end
-
-        -- start osd timer exactly at interval boundary
-        local delay = aligned_timeout( htime2sec(boundary) )
+        -- the 1st delay to start periodic timer
+        local delay
+        -- optional show_at
+        if conf.showat then
+            -- delay start till next showat
+            delay = timeout_till( htime2sec(conf.showat) )
+        else
+            -- start osd timer exactly at interval boundary
+            delay = aligned_timeout( htime2sec(conf.interval) )
+        end
 
         -- delayed start
         mp.add_timeout(delay,
@@ -189,7 +235,7 @@ local function setup_modality(modality)
         )
 
         -- log startup delay for osd timer
-        mp.msg.verbose(modality..'.interval:'..conf.interval..' calc.delay:'..delay..' for boundary:'..boundary)
+        mp.msg.verbose(modality..'.interval:'..conf.interval..' calc.delay:'..delay)
 
         -- optional key binding
         if conf.key then
@@ -201,4 +247,5 @@ local function setup_modality(modality)
 end
 
 -- main --
+setup_modality('osd-clock')
 setup_modality('osd-email')
