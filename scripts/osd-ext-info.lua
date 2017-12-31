@@ -1,7 +1,7 @@
 -- OSD Show External Info (info not related to mpv player or media played)
 --
 -- Shows OSD various external info (modality) like weather forecast, new emails,
--- traffic conditions, currency exchange rates, clock, etc.
+-- traffic conditions, currency exchange rates, clock, server status, etc.
 --
 -- Modalities currently (dec'17) supported (stay tuned as more modalities will be added later):
 --
@@ -40,6 +40,11 @@
 --
 -- To customize configuration place osd-email.conf into ~/.config/mpv/lua-settings/ and edit
 --
+-- OSD-WEATHER -
+-- http://wttr.in/:help http://wttr.in/banska_bystrica?lang=en&m&T&1&n&Q
+-- curl https://query.yahooapis.com/v1/public/yql -d q="select item from weather.forecast where woeid=818511 and u='c'" -d format=json
+-- curl https://query.yahooapis.com/v1/public/yql -d q="select * from weather.forecast where woeid=818511 and u='c'" -d format=json
+-- https://developer.yahoo.com/weather/documentation.html
 --
 -- Place script into ~/.config/mpv/scripts/ for autoload
 --
@@ -55,7 +60,10 @@ local cfg = {
 	    interval = '15m',
 	    format   = "%H:%M",
 	    duration = 2.5,
-	    key      = 'h'
+	    key      = 'h',
+        ['osd-scale']   = 2,
+        ['osd-bold']    = true,
+        ['osd-align-x'] = 'right'
     },
 
     ['osd-email'] = {
@@ -75,11 +83,18 @@ local cfg = {
     },
 
     ['osd-weather'] = {
-        showat   = '55',
+        url      = 'https://query.yahooapis.com/v1/public/yql',
+        location = '818511',
+        units    = 'c',
+        showat   = '59m',
         interval = '1h',
-        format   = 'Today: %d Tomorrow: %s',
-        duration = 5.5,
-        key      = 'w'
+        hformat  = '%s %d°C %s',
+        lformat  = '%s [%s] %d°C/%d°C %s',
+        duration = 15.5,
+        key      = 'w',
+        ['osd-scale']   = 1,
+        ['osd-bold']    = false,
+        ['osd-align-x'] = 'left'
     }
 }
 
@@ -140,19 +155,24 @@ local function exec(cmd)
 end
 
 -- perform curl request and return response
-local function curl(url, userpass, request)
+local function curl(url, data, userpass, request)
     -- connection timeout
     local timeout = 3
 	local cmd = 'curl -sS --connect-timeout '..timeout..' --url "'..url..'"'
 	if userpass then cmd = cmd..' --user "'..userpass..'"' end
 	if request  then cmd = cmd.." --request '"..request.."'" end
+	if data then
+        for key,val in pairs(data) do
+            cmd = cmd.." --data "..key.."='"..val.."'"
+        end
+    end
 	local rs = exec(cmd)
 	return rs
 end
 
 -- get email count via curl and return tuple (count, response)
 local function email_cnt(cfg)
-    local rs = curl(cfg.url, cfg.userpass, cfg.request)
+    local rs = curl(cfg.url, false, cfg.userpass, cfg.request)
     local cnt = tonumber(rs:match(cfg.response))
     return cnt, rs
 end
@@ -175,6 +195,48 @@ local function osd_email_msg(cfg)
     end
     -- error msg
     return string.format(cfg.osderr, rs)
+end
+
+-- very simple json -> table
+local function json2table(json, startswith)
+    if json:len() < startswith:len()
+        or json:sub(1,10) ~= startswith then return end
+    --mp.msg.verbose('osd-weather'..' json = '..json)
+    local s = 'local q='..json:gsub('"(%w+)":', '%1='):gsub('=%[{', '={{'):gsub('}%]', '}}')..'; return q'
+    --local s = 'local q='..json:gsub('"(%w+)":', '%1='):gsub('=%[{', '={{'):gsub('}%]', '}}}')..'; return q'
+    --mp.msg.verbose('osd-weather'..' s = '..s)
+    --local tab = assert(loadstring(s))()
+    return assert(loadstring(s))()
+end
+
+local function weather_forecast(cfg)
+    -- q="select item.forecast from weather.forecast where woeid=818511 and u='c'" -d format=json
+    local data = {
+        -- q=select * from weather.forecast where woeid in (select woeid from geo.places(1) where text='banska bystrica, sk')
+        q = "select item from weather.forecast where woeid="..cfg.location.." and u=\""..cfg.units.."\"",
+        format = "json"
+    }
+    local rs = curl(cfg.url, data, false, false)
+    -- parse json to table
+    local tab = json2table(rs, '{"query":{')
+    return tab
+end
+
+-- formatted weather forecast msg or error
+local function osd_weather_msg(cfg)
+    local tab = weather_forecast(cfg)
+    local item = tab["query"]["results"]["channel"]["item"]
+    -- extract only data
+    local msg = {}
+    -- current values - header
+    local current = item["condition"]
+    table.insert(msg, cfg.hformat:format(current["date"], current["temp"], current["text"]))
+    -- forecats
+    for key,val in pairs(item['forecast']) do
+        table.insert(msg, cfg.lformat:format(val["day"], val["date"], val["high"], val["low"], val["text"]))
+    end
+    mp.msg.verbose('msg='..utils.to_string(msg))
+    return table.concat(msg, '\n')
 end
 
 -- init timer, startup delay, key binding for specific modality from cfg
@@ -225,11 +287,40 @@ local function setup_modality(modality)
 
         -- optional key binding
         if conf.key then
-            mp.add_key_binding(conf.key, fname, osd)
+            -- mp.add_key_binding(conf.key, fname, osd)
+            mp.add_forced_key_binding(conf.key, fname, osd)
             -- log binding
             mp.msg.verbose(modality..".key:'"..conf.key.."' bound to '"..fname.."'")
         end
     end
+end
+
+local osd_save_property = {}
+
+local function set_osd_property(cfg)
+    local filter = 'osd-'
+    osd_save_property = {}
+    for key,val in pairs(cfg) do
+        if key:sub(1, filter:len()) == filter then
+            osd_save_property[key] = mp.get_property_native(key)
+            mp.set_property_native(key, val)
+        end
+    end
+    mp.msg.verbose('osd_save_property='..utils.to_string(osd_save_property))
+end
+
+local function reset_osd_property()
+    for key,val in pairs(osd_save_property) do
+        mp.set_property_native(key, val)
+    end
+end
+
+local function osd_message(msg, cfg)
+    set_osd_property(cfg)
+    mp.msg.verbose('msg='..msg)
+    mp.osd_message(msg, cfg.duration)
+    -- reset will affect currently displayed message
+    -- reset_osd_property()
 end
 
 -- following osd_xxx functions have to be in global namespace _G[]
@@ -238,14 +329,23 @@ end
 function osd_email()
     local msg = osd_email_msg(cfg['osd-email'])
     if msg then
-    	mp.osd_message(msg, cfg['osd-email'].duration)
+    	osd_message(msg, cfg['osd-email'])
     end
 end
 
 -- OSD - show clock
 function osd_clock()
-	local s = os.date(cfg['osd-clock'].format)
-	mp.osd_message(s, cfg['osd-clock'].duration)
+    local conf = cfg['osd-clock']
+	local msg = os.date(conf.format)
+	osd_message(msg, conf)
+end
+
+-- OSD - show weather forecast
+function osd_weather()
+    local msg = osd_weather_msg(cfg['osd-weather'])
+    if msg then
+    	osd_message(msg, cfg['osd-weather'])
+    end
 end
 
 -- main --
@@ -253,4 +353,6 @@ end
 -- OSD-CLOCK
 setup_modality('osd-clock')
 -- OSD-EMAIL
-setup_modality('osd-email')
+--setup_modality('osd-email')
+-- OSD-WEATHER
+setup_modality('osd-weather')
