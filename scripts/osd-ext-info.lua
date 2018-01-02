@@ -79,22 +79,27 @@ local cfg = {
         osdzero  = 'No New emails',
         osderr   = 'ERR: %s',
         duration = 3.5,
-        key      = 'e'
+        key      = 'e',
+        ['osd-scale']   = 2,
+        ['osd-bold']    = true,
+        ['osd-align-x'] = 'right'
     },
 
     ['osd-weather'] = {
-        url      = 'https://query.yahooapis.com/v1/public/yql',
+        url      = 'http://query.yahooapis.com/v1/public/yql',
         location = '818511',
         units    = 'c',
         showat   = '59m',
         interval = '1h',
-        hformat  = '%s %d°C %s',
-        lformat  = '%s [%s] %d°C/%d°C %s',
-        duration = 15.5,
+        hformat  = 'Akualne %H:%M %%3d°C %%s',
+        lformat  = '%a %d.%m. %%3d°C %%3d°C %%s',
+        fformat  = '[%w]| %d | %%i |%%l°C|%%h°C',
+        days     = 4,
+        duration = 55.5,
         key      = 'w',
-        ['osd-scale']   = 1,
-        ['osd-bold']    = false,
-        ['osd-align-x'] = 'left'
+        ['osd-scale']   = 2,
+        ['osd-bold']    = true,
+        ['osd-align-x'] = 'right'
     }
 }
 
@@ -222,21 +227,151 @@ local function weather_forecast(cfg)
     return tab
 end
 
+-- parse yahoo date string to time
+local function ydate2time(str)
+    -- month 3 letters to integer value
+    local m3toi = {Jan=1, Feb=2, Mar=3, Apr=4, May=5, Jun=6, Jul=7, Aug=8, Sep=9, Oct=10, Nov=11, Dec=12 }
+    -- long format
+    if str:len() > 11 then
+        -- Mon, 01 Jan 2018 10:00 PM CET
+        local pattern = "%w+, (%d+) (%w+) (%d+) (%d+):(%d+) (%w+) (%w+)"
+        local d, m3, y, h, m, ampm, zone = str:match(pattern)
+        if ampm == 'PM' then h = h+12 end
+        return os.time({year = y, month = m3toi[m3], day = d, hour = h, min = m})
+    end
+    -- 02 Jan 2018
+    local pattern = "(%d+) (%w+) (%d+)"
+    local d, m3, y = str:match(pattern)
+    return os.time({year = y, month = m3toi[m3], day = d})
+end
+
+local function reformatdate(str, format)
+    return os.date(format, strdate2ts(str))
+end
+
+local function weather_ico(codestr)
+    -- https://en.wikipedia.org/wiki/Miscellaneous_Symbols
+    -- http://xahlee.info/comp/unicode_weather_symbols.html
+    -- https://apps.timwhitlock.info/emoji/tables/unicode
+    -- http://jrgraphix.net/r/Unicode/2600-26FF
+    -- http://xahlee.info/comp/unicode_full-width_chars.html
+    local ico = {
+        sun       = '☀',
+        sun2      = '☼',
+        cloud     = '☁',
+        umbrella  = '☂',
+        rain      = '☔',
+        lighting  = '⚡',
+        snowflake = '❄',
+        fog       = '♒',
+        ellipsis  = '…',
+        space     = ' ',
+        figspace  = ' '
+    }
+    local code = tonumber(codestr)
+    if code == 16 then return ico.snowflake..ico.space end
+    if code == 26 then return ico.cloud..ico.cloud end
+    if code == 27 then return ico.cloud..ico.space end
+    if code == 28 then return ico.cloud..ico.space end
+    if code == 32 then return ico.sun..ico.space end
+    if code == 41 then return ico.snowflake..ico.snowflake end
+    return codestr
+end
+
+local function forecast_table(data, cfg)
+    local tab = {}
+    for key,val in pairs(data.forecast) do
+        if key > cfg.days then break end
+        local ts = strdate2ts(val.date)
+        -- data tokens
+        local frm = cfg.fformat:gsub('%%lo', data.forecast.low)
+        -- :gsub('%hi', data.high):gsub('%ico', weather_ico(data.code))
+        -- date tokens
+        local str = os.date(frm, ts)
+        -- split to rows
+        for idx,row in pairs(str:gmatch('([^|]+)')) do
+            if tab[idx] then
+                tab[idx] = tab[idx]..row
+            else
+                tab[idx] = row
+            end
+        end
+    end
+
+    return tab
+end
+
+local function weather_current_line(data, format)
+    local line = os.date(format, ydate2time(data.date))
+    return line:format(data.temp, weather_ico(data.code))
+end
+
+local function weather_forecast_line(data, format)
+    local line = os.date(format, ydate2time(data.date))
+    return line:format(data.high, data.low, weather_ico(data.code))
+end
+
 -- formatted weather forecast msg or error
 local function osd_weather_msg(cfg)
     local tab = weather_forecast(cfg)
-    local item = tab["query"]["results"]["channel"]["item"]
+    local item = tab.query.results.channel.item
     -- extract only data
     local msg = {}
     -- current values - header
-    local current = item["condition"]
-    table.insert(msg, cfg.hformat:format(current["date"], current["temp"], current["text"]))
+    table.insert(msg, weather_current_line(item.condition, cfg.hformat))
+    -- separator
+    table.insert(msg, '\n')
     -- forecats
-    for key,val in pairs(item['forecast']) do
-        table.insert(msg, cfg.lformat:format(val["day"], val["date"], val["high"], val["low"], val["text"]))
+    for key,val in pairs(item.forecast) do
+        if key <= cfg.days then
+            table.insert(msg, weather_forecast_line(val, cfg.lformat))
+        end
     end
     mp.msg.verbose('msg='..utils.to_string(msg))
     return table.concat(msg, '\n')
+end
+
+local osd_save_property = {}
+
+local function set_osd_property(cfg)
+    local filter = 'osd-'
+    osd_save_property = {}
+    for key,val in pairs(cfg) do
+        if key:sub(1, filter:len()) == filter then
+            osd_save_property[key] = mp.get_property_native(key)
+            mp.set_property_native(key, val)
+        end
+    end
+    mp.msg.verbose('osd_save_property='..utils.to_string(osd_save_property))
+end
+
+local function reset_osd_property()
+    for key,val in pairs(osd_save_property) do
+        mp.set_property_native(key, val)
+    end
+end
+
+local function osd_message(msg, cfg)
+    set_osd_property(cfg)
+    mp.msg.verbose('msg='..msg)
+    mp.osd_message(msg, cfg.duration)
+    -- reset will affect currently displayed message
+    reset_osd_property()
+end
+
+-- transform str to unicode fullwidth (monospace) version
+local function fullwidth(str)
+    return str:gsub('.',
+        function (c)
+            if c > ' ' and c <= '_' then
+                return '\239\188'..string.char(string.byte(c)+96)
+            end
+            if c > '_' and c <= '~' then
+                return '\239\189'..string.char(string.byte(c)+32)
+            end
+            return c
+        end
+    )
 end
 
 -- init timer, startup delay, key binding for specific modality from cfg
@@ -295,41 +430,13 @@ local function setup_modality(modality)
     end
 end
 
-local osd_save_property = {}
-
-local function set_osd_property(cfg)
-    local filter = 'osd-'
-    osd_save_property = {}
-    for key,val in pairs(cfg) do
-        if key:sub(1, filter:len()) == filter then
-            osd_save_property[key] = mp.get_property_native(key)
-            mp.set_property_native(key, val)
-        end
-    end
-    mp.msg.verbose('osd_save_property='..utils.to_string(osd_save_property))
-end
-
-local function reset_osd_property()
-    for key,val in pairs(osd_save_property) do
-        mp.set_property_native(key, val)
-    end
-end
-
-local function osd_message(msg, cfg)
-    set_osd_property(cfg)
-    mp.msg.verbose('msg='..msg)
-    mp.osd_message(msg, cfg.duration)
-    -- reset will affect currently displayed message
-    -- reset_osd_property()
-end
-
--- following osd_xxx functions have to be in global namespace _G[]
+-- following osd_xxx functions (one per modality) have to be in global namespace _G[]
 
 -- OSD - show email status
 function osd_email()
     local msg = osd_email_msg(cfg['osd-email'])
     if msg then
-    	osd_message(msg, cfg['osd-email'])
+    	mp.osd_message(msg, cfg['osd-email'].duration)
     end
 end
 
@@ -337,14 +444,14 @@ end
 function osd_clock()
     local conf = cfg['osd-clock']
 	local msg = os.date(conf.format)
-	osd_message(msg, conf)
+	mp.osd_message(msg, conf.duration)
 end
 
 -- OSD - show weather forecast
 function osd_weather()
     local msg = osd_weather_msg(cfg['osd-weather'])
     if msg then
-    	osd_message(msg, cfg['osd-weather'])
+    	mp.osd_message(msg, cfg['osd-weather'].duration)
     end
 end
 
@@ -353,6 +460,6 @@ end
 -- OSD-CLOCK
 setup_modality('osd-clock')
 -- OSD-EMAIL
---setup_modality('osd-email')
+setup_modality('osd-email')
 -- OSD-WEATHER
 setup_modality('osd-weather')
