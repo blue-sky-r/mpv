@@ -82,7 +82,7 @@ local cfg = {
     ['osd-weather'] = {
         url      = 'http://query.yahooapis.com/v1/public/yql',
         location = 'Toronto, CA',
-        -- locid    = 4118,
+        locid    = 4118,
         unit     = 'C',
         showat   = '59m',
         interval = '1h',
@@ -380,13 +380,13 @@ local function weather_ico(codestr)
     return ico
 end
 
--- current condutions - header line
+-- current conditions - header line
 local function weather_current_line(data, cfg)
     local line = os.date(cfg.hformat, ydate2time(data.date))
     return line:format(data.temp, cfg.unit, weather_ico(data.code))
 end
 
--- forecats lines
+-- forecat line
 local function weather_forecast_line(data, cfg)
     local line = os.date(cfg.lformat, ydate2time(data.date))
     return line:format(data.high, cfg.unit, data.low, cfg.unit, weather_ico(data.code))
