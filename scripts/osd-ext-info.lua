@@ -60,10 +60,7 @@ local cfg = {
 	    interval = '15m',
 	    format   = "%H:%M",
 	    duration = 2.5,
-	    key      = 'h',
-        ['osd-scale']   = 2,
-        ['osd-bold']    = true,
-        ['osd-align-x'] = 'right'
+	    key      = 'h'
     },
 
     ['osd-email'] = {
@@ -79,27 +76,21 @@ local cfg = {
         osdzero  = 'No New emails',
         osderr   = 'ERR: %s',
         duration = 3.5,
-        key      = 'e',
-        ['osd-scale']   = 2,
-        ['osd-bold']    = true,
-        ['osd-align-x'] = 'right'
+        key      = 'e'
     },
 
     ['osd-weather'] = {
         url      = 'http://query.yahooapis.com/v1/public/yql',
-        location = '818511',
-        units    = 'c',
+        location = 'Toronto, CA',
+        -- locid    = 4118,
+        unit     = 'C',
         showat   = '59m',
         interval = '1h',
-        hformat  = 'Akualne %H:%M %%3d°C %%s',
-        lformat  = '%a %d.%m. %%3d°C %%3d°C %%s',
-        fformat  = '[%w]| %d | %%i |%%l°C|%%h°C',
-        days     = 4,
-        duration = 55.5,
-        key      = 'w',
-        ['osd-scale']   = 2,
-        ['osd-bold']    = true,
-        ['osd-align-x'] = 'right'
+        hformat  = 'Weather at %H:%M %%3d°%%s %%s',
+        lformat  = '%a %d.%m. %%3d°%%s %%3d°%%s %%s',
+        days     = 7,
+        duration = 15,
+        key      = 'w'
     }
 }
 
@@ -122,8 +113,6 @@ end
 
 -- calc aligned timeout in sec
 local function aligned_timeout(align)
-    -- special case align=0 => align=60*60 [1h]
-    -- if align == 0 then align = 60*60 end
 	local time = os.time()
 	local atout = align * math.ceil(time / align) - time
 	return atout
@@ -214,13 +203,24 @@ local function json2table(json, startswith)
     return assert(loadstring(s))()
 end
 
+-- yahoo wearher forecast
 local function weather_forecast(cfg)
-    -- q="select item.forecast from weather.forecast where woeid=818511 and u='c'" -d format=json
+    -- weather location id
+    local woeid
+    -- use locid if provided
+    if cfg.locid then
+        woeid = '='..cfg.locid
+    else
+        -- otherwise use subquery to get woeid from textual location
+        woeid = ' in (select woeid from geo.places(1) where text=\"'..cfg.location..'\")'
+    end
+    -- yql
     local data = {
-        -- q=select * from weather.forecast where woeid in (select woeid from geo.places(1) where text='banska bystrica, sk')
-        q = "select item from weather.forecast where woeid="..cfg.location.." and u=\""..cfg.units.."\"",
+        -- q="select item.forecast from weather.forecast where woeid=xxx and u='c'" -d format=json
+        q = "select item from weather.forecast where woeid"..woeid.." and u=\""..cfg.unit:lower().."\"",
         format = "json"
     }
+    -- execute yahoo query
     local rs = curl(cfg.url, data, false, false)
     -- parse json to table
     local tab = json2table(rs, '{"query":{')
@@ -236,7 +236,14 @@ local function ydate2time(str)
         -- Mon, 01 Jan 2018 10:00 PM CET
         local pattern = "%w+, (%d+) (%w+) (%d+) (%d+):(%d+) (%w+) (%w+)"
         local d, m3, y, h, m, ampm, zone = str:match(pattern)
-        if ampm == 'PM' then h = h+12 end
+        -- hh AM/PM -> HH
+        if h == '12' then
+            -- 12:xx AM -> 00:xx
+            if ampm == 'AM' then h = 0 end
+        else
+            -- 1:xx PM -> 13:xx
+            if ampm == 'PM' then h = tonumber(h)+12 end
+        end
         return os.time({year = y, month = m3toi[m3], day = d, hour = h, min = m})
     end
     -- 02 Jan 2018
@@ -245,16 +252,14 @@ local function ydate2time(str)
     return os.time({year = y, month = m3toi[m3], day = d})
 end
 
-local function reformatdate(str, format)
-    return os.date(format, strdate2ts(str))
-end
-
+-- yahoo code to pictogram/icon
 local function weather_ico(codestr)
     -- https://en.wikipedia.org/wiki/Miscellaneous_Symbols
     -- http://xahlee.info/comp/unicode_weather_symbols.html
     -- https://apps.timwhitlock.info/emoji/tables/unicode
     -- http://jrgraphix.net/r/Unicode/2600-26FF
-    -- http://xahlee.info/comp/unicode_full-width_chars.html
+
+    -- using this limited set of unicode symbols
     local ico = {
         sun       = '☀',
         sun2      = '☼',
@@ -265,102 +270,153 @@ local function weather_ico(codestr)
         snowflake = '❄',
         fog       = '♒',
         ellipsis  = '…',
+        hot       = '♨',
+        circle    = '⚪',
+        sparkles  = '✨',
+        loop      = '➰',
+        hottea    = '☕',
         space     = ' ',
         figspace  = ' '
     }
-    local code = tonumber(codestr)
-    if code == 16 then return ico.snowflake..ico.space end
-    if code == 26 then return ico.cloud..ico.cloud end
-    if code == 27 then return ico.cloud..ico.space end
-    if code == 28 then return ico.cloud..ico.space end
-    if code == 32 then return ico.sun..ico.space end
-    if code == 41 then return ico.snowflake..ico.snowflake end
-    return codestr
+    -- https://developer.yahoo.com/weather/documentation.html
+    local code2ico = {
+        -- tornado
+        ['0'] = ico.loop..ico.loop,
+        -- 1 	tropical storm
+        ['1'] = ico.umbrella..ico.umbrella,
+        -- hurricane
+        ['2'] = ico.loop..ico.loop,
+        --  severe thunderstorms
+        ['3'] = ico.lighting..ico.lighting,
+        -- thunderstorms
+        ['4'] = ico.cloud..ico.lighting,
+        -- mixed rain and snow
+        ['5'] = ico.rain..ico.snowflake,
+        -- mixed rain and sleet
+        ['6'] = ico.rain..ico.snowflake,
+        -- mixed snow and sleet
+        ['7'] = ico.snowflake..ico.rain,
+        -- freezing drizzle
+        ['8'] = ico.umbrella..ico.snowflake,
+        -- drizzle
+        ['9'] = ico.umbrella..ico.snowflake,
+        -- freezing rain
+        ['10'] = ico.rain..ico.snowflake,
+        -- showers
+        ['11'] = ico.rain..ico.rain,
+        -- showers
+        ['12'] = ico.rain..ico.rain,
+        -- snow flurries
+        ['13'] = ico.snowflake..ico.snowflake,
+        -- light snow showers
+        ['14'] = ico.snowflake..ico.rain,
+        -- blowing snow
+        ['15'] = ico.snowflake..ico.snowflake,
+        -- snow
+        ['16'] = ico.snowflake..ico.space,
+        -- hail
+        ['17'] = ico.circle..ico.circle,
+        -- sleet
+        ['18'] = ico.snowflake..ico.rain,
+        -- 19 	dust
+        -- 20 	foggy
+        ['20'] = ico.fog..ico.fog,
+        -- 21 	haze
+        ['21'] = ico.fog..ico.space,
+        -- 22 	smoky
+        ['22'] = ico.fog..ico.fog,
+        -- 23 	blustery
+        -- 24 	windy
+        ['24'] = ico.loop..ico.loop,
+        -- 25 	cold
+        ['25'] = ico.sun..ico.hottea,
+	    -- cloudy
+        ['26'] = ico.cloud..ico.cloud,
+        -- mostly cloudy
+        ['27'] = ico.cloud..ico.space,
+        -- mostly cloudy
+        ['28'] = ico.cloud..ico.space,
+        -- partly cloudy (night)
+        ['29'] = ico.sun2..ico.cloud,
+        -- partly cloudy (day)
+        ['30'] = ico.sun..ico.cloud,
+        -- clear (night)
+        ['31'] = ico.space..ico.space,
+        -- sunny
+        ['32'] = ico.sun..ico.space,
+		-- 33 	fair (night)
+		-- 34 	fair (day)
+		-- mixed rain and hail
+        ['35'] = ico.umbrella..ico.circle,
+		-- hot
+        ['36'] = ico.sun..ico.hot,
+		-- isolated thunderstorms
+        ['37'] = ico.cloud..ico.lighting,
+		-- scattered thunderstorms
+        ['38'] = ico.cloud..ico.lighting,
+		-- scattered thunderstorms
+        ['39'] = ico.cloud..ico.lighting,
+		-- scattered showers
+        ['40'] = ico.umbrella..ico.cloud,
+        -- heavy snow
+        ['41'] = ico.snowflake..ico.snowflake, 
+		-- scattered snow showers
+        ['42'] = ico.snowflake..ico.umbrella,
+		-- heavy snow
+        ['43'] = ico.snowflake..ico.snowflake,
+		-- partly cloudy
+        ['44'] = ico.sun..ico.cloud,
+		-- thundershowers
+        ['45'] = ico.cloud..ico.lighting,
+		-- snow showers
+        ['46'] = ico.umbrella..ico.snowflake,
+		-- 47 	isolated thundershowers
+        ['47'] = ico.cloud..ico.lighting
+    }
+    local ico = code2ico[codestr]
+    -- not found, just return raw code
+    if ico == nil then return codestr end
+    -- composite icon
+    return ico
 end
 
-local function forecast_table(data, cfg)
-    local tab = {}
-    for key,val in pairs(data.forecast) do
-        if key > cfg.days then break end
-        local ts = strdate2ts(val.date)
-        -- data tokens
-        local frm = cfg.fformat:gsub('%%lo', data.forecast.low)
-        -- :gsub('%hi', data.high):gsub('%ico', weather_ico(data.code))
-        -- date tokens
-        local str = os.date(frm, ts)
-        -- split to rows
-        for idx,row in pairs(str:gmatch('([^|]+)')) do
-            if tab[idx] then
-                tab[idx] = tab[idx]..row
-            else
-                tab[idx] = row
-            end
-        end
-    end
-
-    return tab
+-- current condutions - header line
+local function weather_current_line(data, cfg)
+    local line = os.date(cfg.hformat, ydate2time(data.date))
+    return line:format(data.temp, cfg.unit, weather_ico(data.code))
 end
 
-local function weather_current_line(data, format)
-    local line = os.date(format, ydate2time(data.date))
-    return line:format(data.temp, weather_ico(data.code))
-end
-
-local function weather_forecast_line(data, format)
-    local line = os.date(format, ydate2time(data.date))
-    return line:format(data.high, data.low, weather_ico(data.code))
+-- forecats lines
+local function weather_forecast_line(data, cfg)
+    local line = os.date(cfg.lformat, ydate2time(data.date))
+    return line:format(data.high, cfg.unit, data.low, cfg.unit, weather_ico(data.code))
 end
 
 -- formatted weather forecast msg or error
 local function osd_weather_msg(cfg)
+    -- yahoo foreast as table
     local tab = weather_forecast(cfg)
+    -- we are interested only in item section
     local item = tab.query.results.channel.item
-    -- extract only data
+    -- extract data to msg
     local msg = {}
     -- current values - header
-    table.insert(msg, weather_current_line(item.condition, cfg.hformat))
+    table.insert(msg, weather_current_line(item.condition, cfg))
     -- separator
     table.insert(msg, '\n')
-    -- forecats
+    -- forecast lines
     for key,val in pairs(item.forecast) do
-        if key <= cfg.days then
-            table.insert(msg, weather_forecast_line(val, cfg.lformat))
-        end
+        if key > cfg.days then break end
+        table.insert(msg, weather_forecast_line(val, cfg))
     end
     mp.msg.verbose('msg='..utils.to_string(msg))
+    -- join lines
     return table.concat(msg, '\n')
-end
-
-local osd_save_property = {}
-
-local function set_osd_property(cfg)
-    local filter = 'osd-'
-    osd_save_property = {}
-    for key,val in pairs(cfg) do
-        if key:sub(1, filter:len()) == filter then
-            osd_save_property[key] = mp.get_property_native(key)
-            mp.set_property_native(key, val)
-        end
-    end
-    mp.msg.verbose('osd_save_property='..utils.to_string(osd_save_property))
-end
-
-local function reset_osd_property()
-    for key,val in pairs(osd_save_property) do
-        mp.set_property_native(key, val)
-    end
-end
-
-local function osd_message(msg, cfg)
-    set_osd_property(cfg)
-    mp.msg.verbose('msg='..msg)
-    mp.osd_message(msg, cfg.duration)
-    -- reset will affect currently displayed message
-    reset_osd_property()
 end
 
 -- transform str to unicode fullwidth (monospace) version
 local function fullwidth(str)
+    -- http://xahlee.info/comp/unicode_full-width_chars.html
     return str:gsub('.',
         function (c)
             if c > ' ' and c <= '_' then
@@ -372,6 +428,15 @@ local function fullwidth(str)
             return c
         end
     )
+end
+
+-- set locale
+local function set_locale()
+    -- set date/time locale from LC_ALL/LC_TIME/LANG
+    local loc = os.setlocale('', 'time')
+    -- error msg if fail
+    if loc == nil then loc = 'LC_TIME/LC_ALL/LANG failed, check locale' end
+    mp.msg.verbose('set date/time locale to:'..loc)
 end
 
 -- init timer, startup delay, key binding for specific modality from cfg
@@ -386,7 +451,7 @@ local function setup_modality(modality)
     -- log active config
     mp.msg.verbose(modality..'.cfg = '..utils.to_string(conf))
 
-    -- non empty interval enables osd clock
+    -- non empty interval enables modality ?
     if conf.interval then
 
         -- function name from modality
@@ -456,6 +521,9 @@ function osd_weather()
 end
 
 -- main --
+
+-- set locale for date
+set_locale()
 
 -- OSD-CLOCK
 setup_modality('osd-clock')
