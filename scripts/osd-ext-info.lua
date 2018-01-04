@@ -1,19 +1,21 @@
--- OSD Show External Info (info not related to mpv player or media played)
+-- OSD Show External Info (info not related to mpv player nor media played)
 --
 -- Shows OSD various external info (modality) like weather forecast, new emails,
 -- traffic conditions, currency exchange rates, clock, server status, etc.
 --
--- Modalities currently (dec'17) supported (stay tuned as more modalities will be added later):
+-- Modalities currently (jan'18) supported (stay tuned as more modalities will be added later):
 --
--- OSD-CLOCK - shows clock periodicaly - configurable options:
+-- OSD-CLOCK - periodicaly shows the clock - configurable options:
+-- =========
 --   interval ... how often to show OSD clock, either seconds or human friendly format like '1h 33m 5s' supported
 --   format   ... date format string
 --   duration ... how long [in seconds] OSD msg stays, fractional values supported
 --   key      ... to bind showing OSD clock on request (false for no binding)
 --
--- To customize configuration place osd-clock.conf into ~/.config/mpv/lua-settings/ and edit
+-- To customize configuration place osd-clock.conf template into ~/.config/mpv/lua-settings/ and edit
 --
--- OSD-EMAIL - shows new email count periodically - configurable options:
+-- OSD-EMAIL - periodicaly shows new email count - configurable options:
+-- =========
 --   url      ... url to connect to imap/pop server
 --   userpass ... authentication in login:password format
 --   request  ... request to send to get new email count
@@ -38,13 +40,35 @@
 --   * SEARCH
 --   * SEARCH 304 318 342 360 372
 --
--- To customize configuration place osd-email.conf into ~/.config/mpv/lua-settings/ and edit
+-- To customize configuration place osd-email.conf template into ~/.config/mpv/lua-settings/ and edit
 --
--- OSD-WEATHER -
--- http://wttr.in/:help http://wttr.in/banska_bystrica?lang=en&m&T&1&n&Q
--- curl https://query.yahooapis.com/v1/public/yql -d q="select item from weather.forecast where woeid=818511 and u='c'" -d format=json
--- curl https://query.yahooapis.com/v1/public/yql -d q="select * from weather.forecast where woeid=818511 and u='c'" -d format=json
+-- OSD-WEATHER - periodicaly shows weather forecast and current condition
+-- ===========
+-- Header line (hformat) shows time, current temperature and weather icons/pictograms.
+-- Then empty separator lines is shown.
+-- The forecast data are shown in line per day format (lformat) with day-of-week, date, high temp., low temp.
+-- and weather icons/pictograms. To customize icons/pictograms check weather_ico() function table code2ico.
+-- The icons/pictograms are composed of commonly available unicode symbols so no special weather font
+-- installation is required - configurable options:
+--   url      ... url to retrieve forecast data (free yahoo API)
+--   location ... textual location description like city, state (use only if you cannot get locid)
+--   locid    ... location id (yahoo woeid), preferred over location even if location is provided (unique, faster query)
+--   unit     ... units C for celsius, F for farenheit
+--   showat   ... at what time to show OSD forecast, seconds or human friendly format like '33m 5s' supported
+--   interval ... how often to show OSD forecast, either seconds or human friendly format like '1h 33m 5s' supported
+--   hformat  ... OSD header format with current weather conditions
+--   lformat  ... OSD weather forecats line (one per day)
+--   days     ... how many days to show in forecast (yahoo gives max. 10)
+--   duration ... how long [in seconds] OSD msg stays, fractional values supported
+--   key      ... to bind showing OSD forecast on request (false for no binding)
+--
+-- Note to hformat and lformat:
+--   single % for date tokens, double %% for string.format tokens as the string passes through two formatters
+--
+-- curl https://query.yahooapis.com/v1/public/yql -d q="select item from weather.forecast where woeid=4118 and u='c'" -d format=json
 -- https://developer.yahoo.com/weather/documentation.html
+--
+-- To customize configuration place osd-weather.conf template into ~/.config/mpv/lua-settings/ and edit
 --
 -- Place script into ~/.config/mpv/scripts/ for autoload
 --
@@ -386,7 +410,7 @@ local function weather_current_line(data, cfg)
     return line:format(data.temp, cfg.unit, weather_ico(data.code))
 end
 
--- forecat line
+-- forecast line
 local function weather_forecast_line(data, cfg)
     local line = os.date(cfg.lformat, ydate2time(data.date))
     return line:format(data.high, cfg.unit, data.low, cfg.unit, weather_ico(data.code))
@@ -495,7 +519,7 @@ local function setup_modality(modality)
     end
 end
 
--- following osd_xxx functions (one per modality) have to be in global namespace _G[]
+-- following osd_xxx functions (one per modality) have to be in global namespace _G[] --
 
 -- OSD - show email status
 function osd_email()
