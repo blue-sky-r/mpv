@@ -350,6 +350,7 @@ local function weather_ico(codestr)
         -- 22 	smoky
         ['22'] = ico.fog..ico.fog,
         -- 23 	blustery
+        ['23'] = ico.loop..ico.loop,
         -- 24 	windy
         ['24'] = ico.loop..ico.loop,
         -- 25 	cold
