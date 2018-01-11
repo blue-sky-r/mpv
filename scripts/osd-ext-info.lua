@@ -370,7 +370,9 @@ local function weather_ico(codestr)
         -- sunny
         ['32'] = ico.sun..ico.space,
 		-- 33 	fair (night)
+        ['33'] = ico.sun..ico.cloud,
 		-- 34 	fair (day)
+        ['34'] = ico.sun..ico.cloud,
 		-- mixed rain and hail
         ['35'] = ico.umbrella..ico.circle,
 		-- hot
