@@ -5,7 +5,7 @@ These scripts are completely independent and can be used as such. Just copy whic
 in to your `scripts/` directory (see [here](https://mpv.io/manual/master/#lua-scripting) for installation instructions).
 
 * [Channel by Name](#channel-by-name)
-* [OSD Clock](#osd clock)
+* [OSD Clock](#osd-clock)
 * [Show Stream Title](#show-stream-title)
 * [TV](#tv)
 
@@ -44,6 +44,8 @@ to the channel "CBC News"
 
 ### [OSD Clock](osd-clock.lua)
 
+![OSD Clock](../screenshots/osd-clock.jpg)
+
 Periodically shows OSD clock with many configurable options:
 * interval ... how often to show OSD clock, either seconds or human friendly format like '1h 33m 5s' is supported (default '15m')
 * format   ... date format string (default "%H:%M")
@@ -53,14 +55,12 @@ Periodically shows OSD clock with many configurable options:
 
 There is an implemented logic to start nicely at interval boundary, for example:
     
-    interval='10m' wil dipslay OSD clock at 10,20,30,40,50,00
-    interval='15m' wil dipslay OSD clock at 15,30,45,00
+    interval='10m' will dipslay OSD clock at 10,20,30,40,50,00
+    interval='15m' will dipslay OSD clock at 15,30,45,00
     
 Files:
 * [osd-clock.lua](osd-clock.lua) - Lua script
 * [osd-clock.conf](osd-clock.conf) - default config as template for user config
-
-![OSD Clock](../screenshots/osd-clock.jpg)
 
 ### [Show Stream Title](show-stream-title.lua)
 
