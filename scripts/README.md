@@ -9,7 +9,6 @@ in to your `scripts/` directory (see [here](https://mpv.io/manual/master/#lua-sc
 * [Show Stream Title](#show-stream-title)
 * [TV](#tv)
 
-
 Other user mpv scripts can be found in [mpv-wiki-user-scripts](https://github.com/mpv-player/mpv/wiki/User-Scripts "mpv scripts") repository.
 
 ### [Channel by Name](channel-by-name.lua)
