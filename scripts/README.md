@@ -4,6 +4,12 @@ This repository contains Lua scripts for [mpv player](https://github.com/mpv-pla
 These scripts are completely independent and can be used as such. Just copy whichever scripts you're interested 
 in to your `scripts/` directory (see [here](https://mpv.io/manual/master/#lua-scripting) for installation instructions).
 
+* [Channel by Name](#channel-by-name)
+* [OSD Clock](#osd clock)
+* [Show Stream Title](#show-stream-title)
+* [TV](#tv)
+
+
 Other user mpv scripts can be found in [mpv-wiki-user-scripts](https://github.com/mpv-player/mpv/wiki/User-Scripts "mpv scripts") repository.
 
 ### [Channel by Name](channel-by-name.lua)
@@ -54,6 +60,8 @@ There is an implemented logic to start nicely at interval boundary, for example:
 Files:
 * [osd-clock.lua](osd-clock.lua) - Lua script
 * [osd-clock.conf](osd-clock.conf) - default config as template for user config
+
+![OSD Clock](../screenshots/osd-clock.jpg)
 
 ### [Show Stream Title](show-stream-title.lua)
 
