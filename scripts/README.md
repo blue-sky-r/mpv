@@ -47,7 +47,8 @@ to the channel "CBC News"
 ![OSD Clock](../screenshots/osd-clock.jpg)
 
 Periodically shows OSD clock with many configurable options:
-* interval ... how often to show OSD clock, either seconds or human friendly format like '1h 33m 5s' is supported (default '15m')
+* interval ... how often to show OSD clock, either seconds or human friendly format like '1h 33m 5s' is supported (default 
+is '15m' e.g. the clock will be shown 4 times per hour at minutes equal to 00,15,30,45)
 * format   ... date format string (default "%H:%M")
 * duration ... how long [in seconds] OSD stays on screen, fractional values supported (default 1.2)
 * key      ... to bind showing OSD clock on request (false for no binding; default 'h' key)
@@ -63,6 +64,8 @@ Files:
 * [osd-clock.conf](osd-clock.conf) - default config as template for user config
 
 ### [Show Stream Title](show-stream-title.lua)
+
+![Show Stream Title](../screenshots/show-stream-title.jpg)
 
 Shows OSD stream title defined in the playlist on stream change. However, the `media-title` property
 gets updated more frequently then the stream changes. Therefore it is important to filter out unwanted updates
