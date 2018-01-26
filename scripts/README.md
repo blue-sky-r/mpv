@@ -6,6 +6,7 @@ in to your `scripts/` directory (see [here](https://mpv.io/manual/master/#lua-sc
 
 * [Channel by Name](#channel-by-name)
 * [OSD Clock](#osd-clock)
+* [OSD Ext Info](#osd-ext-info)
 * [Show Stream Title](#show-stream-title)
 * [TV](#tv)
 
@@ -62,6 +63,54 @@ There is an implemented logic to start nicely at interval boundary, for example:
 Files:
 * [osd-clock.lua](osd-clock.lua) - Lua script
 * [osd-clock.conf](osd-clock.conf) - default config as template for user config
+
+### [OSD Ext Info](osd-ext-info.lua)
+
+Periodically shows OSD various external (e.g. not related to mpv player nor media played) info (modality) like weather 
+forecast, new emails, traffic conditions, currency exchange rates, clock, server status, etc.
+
+Modalities currently (jan'18) implemented (stay tuned as more modalities will be added later):
+* OSD CLOCK - periodicaly shows the clock - configurable options:
+  * interval ... how often to show OSD clock, either seconds or human friendly format like '1h 33m 5s' supported
+  * format   ... date format string
+  * duration ... how long [in seconds] OSD msg stays, fractional values supported
+  * key      ... to bind showing OSD clock on request (false for no binding)
+
+* OSD EMAIL - periodicaly shows new email count - configurable options:
+  * url      ... url to connect to imap/pop server
+  * userpass ... authentication in login:password format
+  * request  ... request to send to get new email count
+  * response ... response from email server to parse to get raw new email count
+  * cntofs   ... offset compensation of unread email count (will be subtracted before evaluatimg, should be 0)
+  * showat   ... at what time to show OSD email status, seconds or human friendly format like '33m 5s' supported
+  * interval ... how often to show OSD email status, either seconds or human friendly format like '1h 33m 5s' supported
+  * osdpos   ... msg shown if count os new emails is positive (you have xx new emails)
+  * osdneg   ... msg shown if count of new emails is negative (warning: fix offset cfg.cntofs)
+  * osdzero  ... msg shown if count of new emails is equal zero (no new emails)
+  * osderr   ... error message shown in case of any curl error
+  * duration ... how long [in seconds] OSD msg stays, fractional values supported
+  * key      ... to bind showing OSD email count on request (false for no binding)
+
+* OSD WEATHER - periodicaly shows weather forecast and current condition
+  The forecast data are shown in line per day format (lformat) with current condition as header (hformat).
+  The icons/pictograms are composed of commonly available unicode symbols - configurable options:
+  * url      ... url to retrieve forecast data (free yahoo API)
+  * location ... textual location description like city, state (use only if you cannot get locid)
+  * locid    ... location id (yahoo woeid), preferred over location even if location is provided (unique, faster query)
+  * unit     ... units C for celsius, F for farenheit
+  * showat   ... at what time to show OSD forecast, seconds or human friendly format like '33m 5s' supported
+  * interval ... how often to show OSD forecast, either seconds or human friendly format like '1h 33m 5s' supported
+  * hformat  ... OSD header format with current weather conditions
+  * lformat  ... OSD weather forecats line (one per day)
+  * days     ... how many days to show in forecast (yahoo gives max. 10)
+  * duration ... how long [in seconds] OSD msg stays, fractional values supported
+  * key      ... to bind showing OSD forecast on request (false for no binding)
+
+Files:
+* [osd-ext-info.lua](osd-ext-info.lua) - Lua script
+* [osd-clock.conf](osd-clock.conf) - default config as template for user config
+* [osd-email.conf](osd-email.conf) - default config as template for user config
+* [osd-weather.conf](osd-weather.conf) - default config as template for user config
 
 ### [Show Stream Title](show-stream-title.lua)
 
