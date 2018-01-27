@@ -1,9 +1,9 @@
--- OSD Show External Info (info not related to mpv player nor media played)
+-- OSD Show External Info (e.g. info not related to mpv player nor media played)
 --
 -- Shows OSD various external info (modality) like weather forecast, new emails,
 -- traffic conditions, currency exchange rates, clock, server status, etc.
 --
--- Modalities currently (jan'18) supported (stay tuned as more modalities will be added later):
+-- Modalities currently (jan'18) implemented (stay tuned as more modalities will be added later):
 --
 -- OSD-CLOCK - periodicaly shows the clock - configurable options:
 -- =========
