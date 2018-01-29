@@ -76,6 +76,8 @@ Modalities currently (jan'18) implemented (stay tuned as more modalities will be
   * duration ... how long [in seconds] OSD msg stays, fractional values supported
   * key      ... to bind showing OSD clock on request (false for no binding)
 
+![OSD Clock](../screenshots/osd-clock.jpg)
+
 * OSD EMAIL - periodicaly shows new email count - configurable options:
   * url      ... url to connect to imap/pop server
   * userpass ... authentication in login:password format
@@ -90,6 +92,8 @@ Modalities currently (jan'18) implemented (stay tuned as more modalities will be
   * osderr   ... error message shown in case of any curl error
   * duration ... how long [in seconds] OSD msg stays, fractional values supported
   * key      ... to bind showing OSD email count on request (false for no binding)
+
+![OSD email](../screenshots/osd-email-2.jpg)
 
 * OSD WEATHER - periodicaly shows weather forecast and current condition
   The forecast data are shown in line per day format (lformat) with current condition as header (hformat).
