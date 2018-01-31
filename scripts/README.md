@@ -110,6 +110,8 @@ Modalities currently (jan'18) implemented (stay tuned as more modalities will be
   * duration ... how long [in seconds] OSD msg stays, fractional values supported
   * key      ... to bind showing OSD forecast on request (false for no binding)
 
+![OSD Weather](../screenshots/osd-weather-toronto.jpg)
+
 Files:
 * [osd-ext-info.lua](osd-ext-info.lua) - Lua script
 * [osd-clock.conf](osd-clock.conf) - default config as template for user config
