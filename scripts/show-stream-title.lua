@@ -32,7 +32,7 @@ local cfg = {
     -- OSD text format
     format = "%N. %t",
     -- validate title from playlist (empty for passthrough = valid all)
-    valid  = "%w+,,0$"
+    valid  = "^.+,,0$"
 }
 
 -- check if string is valid title by cfg.valid pattern
