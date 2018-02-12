@@ -1,6 +1,8 @@
 -- Channel Survey Simple - periodically switch channels in round-robbin fasion
 --
 -- Channel survey mode is periodic roundabout style channel switching.
+-- It starts timer upon loading and after configurable duration it will switch to next channel.
+-- After reaching the last channel it starts again from beginning.
 -- Usefull when you want to scan channels for security purposes etc ...
 --
 -- Channel survey simple configurable options:
