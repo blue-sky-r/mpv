@@ -44,7 +44,7 @@ local saved = {
 local function next_channel()
     local key = 'playlist-pos'
     local pos = mp.get_property_native(key)
-    mp.msg.verbose('next-channel() before inc ' .. key .. '=' .. pos)
+    -- mp.msg.verbose('next-channel() before inc ' .. key .. '=' .. pos)
     pos = (pos + 1) % mp.get_property_native('playlist-count')
     mp.set_property_native(key, pos)
     mp.msg.verbose('next-channel() '..key..'='..pos)
