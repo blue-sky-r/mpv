@@ -23,10 +23,12 @@ local utils   = require("mp.utils")
 local cfg = {
     playlist = "live-ski-sk.m3u8",
     duration = 60,
+    -- start position/channel: 0..x, random, continue, nil
+    startpos = 'continue',
     key      = 'x'
 }
 
--- read lua-settings/channel-by-name.conf
+-- read lua-settings/channel-survey.conf
 options.read_options(cfg, 'channel-survey')
 
 -- log active config
@@ -34,16 +36,39 @@ mp.msg.verbose('cfg = '..utils.to_string(cfg))
 
 local saved = {
     playlist_pos  = nil,
-    playlist_path = nil
+    playlist_path = nil,
+    survey_pos    = nil
 }
 
 -- round-robbin channel switching
 local function next_channel()
     local key = 'playlist-pos'
     local pos = mp.get_property_native(key)
+    mp.msg.verbose('next-channel() before inc ' .. key .. '=' .. pos)
     pos = (pos + 1) % mp.get_property_native('playlist-count')
     mp.set_property_native(key, pos)
     mp.msg.verbose('next-channel() '..key..'='..pos)
+end
+
+-- start survey position
+local function playlist_pos()
+    local key = 'playlist-pos'
+    local pos = cfg.startpos
+    -- random
+    if pos == 'random' then
+        local last = mp.get_property_native('playlist-count')
+        pos = math.random(last)
+    end
+    -- continue
+    if pos == 'continue' then
+        pos = saved.survey_pos
+    end
+    -- valid channel number
+    if tonumber(pos) then
+        return key .. '=' .. pos
+    end
+    -- nil or anythung else means no specific start position
+    return ''
 end
 
 -- periodic timer for channels switching
@@ -56,18 +81,22 @@ timer:kill()
 local function survey_start()
     -- save actual playlist position
     saved.playlist_pos = mp.get_property_native('playlist-pos')
+    -- start at this playlist position
+    local pos = playlist_pos()
     -- load survey playlist
-    mp.commandv("loadfile", cfg.playlist, "replace", "playlist-pos=0")
+    mp.commandv("loadfile", cfg.playlist, "replace", pos)
     -- start timer
     timer:resume()
     -- log
-    mp.msg.info('survey_start() loadfile:' .. cfg.playlist)
+    mp.msg.info('survey_start() loadfile:' .. cfg.playlist .. ' ' .. pos)
 end
 
 -- end of channel survey
 local function survey_stop()
     -- stop timer
     timer:kill()
+    -- save survey position
+    saved.survey_pos = mp.get_property_native('playlist-pos')
     -- load saved playlist and position
     mp.commandv("loadfile", saved.playlist_path, "replace", "playlist-pos="..saved.playlist_pos)
     -- log
@@ -93,7 +122,7 @@ function channel_survey()
     -- only activate if non-zero duration
     if cfg.duration then
     	-- log
-	    mp.msg.info('playlist name:'..cfg.playlist..', duration:'..cfg.duration..', timer.is_enambled:'..utils.to_string(timer:is_enabled()) )
+	    mp.msg.info('playlist name:'..cfg.playlist..', duration:'..cfg.duration..', timer.is_enabled:'..utils.to_string(timer:is_enabled()) )
         -- toggle run->stop or stop->run
         if timer:is_enabled() then survey_stop() else survey_start() end
     end
