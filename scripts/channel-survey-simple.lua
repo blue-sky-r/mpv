@@ -1,12 +1,17 @@
 -- Channel Survey Simple - periodically switch channels in round-robbin fasion
 --
 -- Channel survey mode is periodic roundabout style channel switching.
--- It starts timer upon loading and after configurable duration it will switch to next channel.
--- After reaching the last channel it starts again from beginning.
--- Usefull when you want to scan channels for security purposes etc ...
+-- There is an option key trigger to start/stop survey. If no key is defined the survey mode starts
+-- upon loading the script. Each channel stays on configurable duration. Then it will switch
+-- to the next channel up. After reaching the last channel it starts again from beginning.
+--
+-- Usefull when you want to scan channels or for security purposes (CCTV) etc ...
 --
 -- Channel survey simple configurable options:
---   duration ... how long [in seconds] to show each channel, fractional values supported
+--   duration  ... how long [in seconds] to show each channel, fractional values supported
+--   osd_start ... optional OSD message shown on survey mode start (%t token expands to duration)
+--   osd_stop  ... optional message shown on survey mode stop
+--   key       ... optional key to toggle survey mode (empy/nil for instant survey mode upnon load)
 --
 -- To customize configuration place channel-survey-simple.conf template into ~/.config/mpv/lua-settings/ and edit
 --
@@ -61,9 +66,9 @@ local function toggle_survey()
     mp.msg.verbose('toggle_survey() ' .. 'survey active=' .. utils.to_string(timer:is_enabled()))
 end
 
--- key to activate channel survey mode
+-- optional key to activate channel survey mode
 if cfg.key then
-    -- if key is defined wait for key to start timer
+    -- if the toggle key is defined wait for key to start survey
     timer:kill()
     -- start survey only on keypress
     mp.add_forced_key_binding(cfg.key, 'channel-survey-simple', toggle_survey)
