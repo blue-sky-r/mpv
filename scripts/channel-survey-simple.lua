@@ -19,7 +19,10 @@ local utils   = require("mp.utils")
 
 -- defaults
 local cfg = {
-    duration = 60
+    duration = 10,
+    osd_start = 'survey start %ts',
+    osd_stop  = 'survey stop',
+    key = '/'
 }
 
 -- read lua-settings/channel-survey-simple.conf
@@ -39,3 +42,29 @@ end
 
 -- periodic timer for channels switching
 local timer = mp.add_periodic_timer(cfg.duration, next_channel)
+
+-- toggle survey mode
+local function toggle_survey()
+    -- toggle logic
+    if timer:is_enabled() then
+        -- running -> stop
+        timer:kill()
+        -- osd message
+        if cfg.osd_stop then mp.osd_message(cfg.osd_stop) end
+    else
+        -- stop -> start
+        timer:resume()
+        -- osd message
+        if cfg.osd_start then mp.osd_message(cfg.osd_start:gsub('%%t', cfg.duration)) end
+    end
+    -- log
+    mp.msg.verbose('toggle_survey() ' .. 'survey active=' .. utils.to_string(timer:is_enabled()))
+end
+
+-- key to activate channel survey mode
+if cfg.key then
+    -- if key is defined wait for key to start timer
+    timer:kill()
+    -- start survey only on keypress
+    mp.add_forced_key_binding(cfg.key, 'channel-survey-simple', toggle_survey)
+end
