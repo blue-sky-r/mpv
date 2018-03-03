@@ -60,6 +60,8 @@ There is an implemented logic to start nicely at interval boundary, for example:
     interval='10m' will dipslay OSD clock at 10,20,30,40,50,00
     interval='15m' will dipslay OSD clock at 15,30,45,00
     
+Note: OSD Clock (and more) is also available as optional modality in [OSD Ext Info](#osd-ext-info)
+     
 Files:
 * [osd-clock.lua](osd-clock.lua) - Lua script
 * [osd-clock.conf](osd-clock.conf) - default config as template for user config
@@ -70,11 +72,14 @@ Periodically shows OSD various external (e.g. not related to mpv player nor medi
 forecast, new emails, traffic conditions, currency exchange rates, clock, server status, etc.
 
 Modalities currently (jan'18) implemented (stay tuned as more modalities will be added later):
+
 * OSD CLOCK - periodicaly shows the clock - configurable options:
   * interval ... how often to show OSD clock, either seconds or human friendly format like '1h 33m 5s' supported
   * format   ... date format string
   * duration ... how long [in seconds] OSD msg stays, fractional values supported
   * key      ... to bind showing OSD clock on request (false for no binding)
+
+Note: Do not use simple [OSD Clock](#osd-clock) at the same time as this modality
 
 ![OSD Clock](../screenshots/osd-clock.jpg)
 
