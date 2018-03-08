@@ -9,6 +9,7 @@ in to your `scripts/` directory (see [here](https://mpv.io/manual/master/#lua-sc
 * [OSD Ext Info](#osd-ext-info)
 * [Show Stream Title](#show-stream-title)
 * [TV](#tv)
+* [Channel Survey Simple](#channel-survey-simple)
 
 Other user mpv scripts can be found in [mpv-wiki-user-scripts](https://github.com/mpv-player/mpv/wiki/User-Scripts "mpv scripts") repository.
 
@@ -159,6 +160,25 @@ There are also implicit security issues due to a nature of direct execution of c
 Files:
 * [tv.lua](tv.lua) - Lua script
 * [tv.conf](tv.conf) - default config as template for user config
+
+### [Channel Survey Simple](channel-survey-simple.lua)
+
+Channel survey mode is periodic roundabout style channel switching.
+There is an option key to toggle survey start and survey stop mode. 
+If no trigger key is defined the survey mode starts upon loading the script. 
+Each channel is shown configurable duration. Usefull when you want to scan channels 
+or for security purposes like CCTV etc ...
+
+Configurable options:
+* duration  ... how long (in seconds) to show each channel, fractional values supported
+* osd_start ... optional OSD message shown on survey mode start (%t token expands to duration)
+* osd_stop  ... optional message shown on survey mode stop
+* key       ... optional key to toggle survey mode (empy/nil for instant survey mode upnon load)
+
+Files:
+* [channel-survey-simple.lua](channel-survey-simple.lua) - Lua script
+* [Channel-survey-simple.conf](channel-survey=simple.conf) - default config as template for user config
+
 
 **keywords**: mpv, lua, script
 
