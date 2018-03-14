@@ -1,4 +1,4 @@
--- Channel Survey Simple - periodically switch channels in round-robbin fasion
+-- Channel Survey Simple - periodically switch channels in round-robbin fashion
 --
 -- Channel survey mode is periodic roundabout style channel switching.
 -- There is an option key trigger to start/stop survey. If no key is defined the survey mode starts
