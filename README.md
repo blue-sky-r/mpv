@@ -13,12 +13,13 @@ Switching channels is then just moving through playlist up or down.
 
 These are small and usefull improvements for mpv iPTV mode live stream watching:
 
-* [Channel by Name](scripts/channel-by-name)
-* [OSD Clock](scripts/osd-clock)
-* [OSD Ext Info](scripts/osd-ext-info)
-* [Show Stream Title](scripts/show-stream-title)
-* [TV out](scripts/tv)
-* [Channel Survey Simple](scripts/channel-survey-simple)
+* [Channel by Name](scripts/channel-by-name.lua)
+* [OSD Clock](scripts/osd-clock.lua)
+* [OSD Ext Info](scripts/osd-ext-info.lua)
+* [Show Stream Title](scripts/show-stream-title.lua)
+* [TV out](scripts/tv.lua)
+* [Channel Survey Simple](scripts/channel-survey-simple.lua)
+
 
 #### To Do
 
