@@ -478,8 +478,8 @@ local function setup_modality(modality)
     -- log active config
     mp.msg.verbose(modality..'.cfg = '..utils.to_string(conf))
 
-    -- non empty interval enables modality ?
-    if conf.interval then
+    -- non empty interval enables modality
+    if #conf.interval > 0 then
 
         -- function name from modality
         local fname = modality:gsub('-', '_')
