@@ -158,6 +158,11 @@ local function empty(v)
 	return not v or v == '' or string.find(v,"^%s*$")
 end
 
+-- par is empty string or represents zero value (like 0h 0m 0s)
+local function empty_time(par)
+    return empty(par) or htime2sec(par) == 0
+end
+
 -- execute shell cmd and return stdout and stderr
 local function exec(cmd)
 	-- return if there is nothing to execute
@@ -478,9 +483,12 @@ local function setup_modality(modality)
     -- log active config
     mp.msg.verbose(modality..'.cfg = '..utils.to_string(conf))
 
-    -- non empty interval enables modality
-    if #conf.interval > 0 then
-
+    -- empty or zero interval disables modality
+    if empty_time(conf.interval) then
+        -- log modality is disabled
+        mp.msg.verbose(modality .. ' modality has been disabled by empty/zero interval')
+    else
+        -- modality isenabled
         -- function name from modality
         local fname = modality:gsub('-', '_')
         -- call this function in global namespace for OSD
