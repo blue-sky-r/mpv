@@ -6,17 +6,17 @@
 -- Instead of always keeping playlist and input.conf synchronized we can select channel by name (title)
 -- and let the script to find correct position in the playlist (index) and switch to required stream.
 -- The script builds up local lookup table (dictionary) name2num.channels -> channel_number (playlist position)
--- To detect playlist changes it observes playlist-count property and compares value to the local lookup
--- dictionary name2num. As Lua language does not support length/sizeof for tables the name2num size is also
+-- To detect playlist changes it observes playlist-count property and compares the new value to the size of name2num
+-- table/dictionary. As Lua language does not support length/sizeof for tables the name2num size is also
 -- kept locally in name2num.count for performance reasons. This playlist changes detection would fail if you
--- load new playlist with exactly the same number of entries as the previous playlist had. In such a cases
+-- load the new playlist with exactly the same number of entries as the previous playlist has. In such a cases
 -- simply set config option cfg.forcerefresh to true. This will force refresh even if the playlist size is the same.
 -- Can also be used for alternate way to switch channels like voice recognition, web page etc.
 --
 -- Configurable options:
---   match   ... glob style pattern to match channel name (default is case insensitive substring "*s*")
---               token "s" represents channel name string (see bellow for more glob patterns)
---   refresh ... autorefresh playlist on each playlist-count change (default false)
+--   match         ... glob style pattern to match channel name (default is case insensitive substring "*s*")
+--                     token "s" represents channel name string (see bellow for more glob patterns)
+--   forcedrefresh ... autorefresh playlist on each playlist-count change (default false)
 --
 -- To customize configuration place channel-by-name.conf into ~/.config/mpv/script-opts/ [~/.config/mpv/lua-settings/ ] and edit
 --
@@ -29,6 +29,8 @@
 -- # key to channel -> name assignment
 -- c script-message-to channel_by_name channel CNN
 -- d script-message-to channel_by_name channel Discovery
+-- # also works with channel numbers
+-- a script-message-to channel_by_name channel 37
 
 -- includes
 local options = require("mp.options")
@@ -91,7 +93,7 @@ local name2num = {
 }
 
 -- lookup channel number by channel name
-local function lookup_name2num(name)
+local function lookup_name2num(name, notfound)
     mp.msg.info("lookup_name2num(".. name ..")")
     -- adjust case
     if case_insensitive then name = name:lower() end
@@ -102,17 +104,32 @@ local function lookup_name2num(name)
             return chnum
         end
     end
+    return notfound
 end
 
--- set channel by name
+-- set channel by name/number
 local function channel(name)
     -- lookup playlist position
-    local num = lookup_name2num(name)
+    local num = lookup_name2num(name, tonumber(name))
     -- set playlist-pos-1
     if num then
         mp.msg.info("channel(".. name ..") set playlist-pos-1:".. num)
         mp.set_property("playlist-pos-1", num)
     end
+end
+
+-- switch to next channel in round-robbin fashion for surveys
+local function next_channel(first, last)
+    -- new channel number is actual + 1
+    local newch = mp.get_property_number("playlist-pos-1") + 1
+    -- start from the first channel if new channel is over the last one
+    if newch > lookup_name2num(last, tonumber(last)) then
+        return channel(first)
+    end
+    -- log
+    mp.msg.info("next_channel(" .. first .. ", ".. last .. ")  playlist-pos-1:" .. newch)
+    -- switch next channel
+    mp.set_property("playlist-pos-1", newch)
 end
 
 -- playlist title to channel name
@@ -172,7 +189,11 @@ local function create_playlist_dict(name, count)
     refresh_name2num()
 end
 
--- monitor playlist-count changes
+-- monitor playlist-count changes to rebuild lookup table
 mp.observe_property('playlist-count', 'number', create_playlist_dict)
---
-mp.register_script_message("channel", channel)
+
+-- switch channel by name/number
+mp.register_script_message("channel",      channel)
+
+-- for channel-survey
+mp.register_script_message("next_channel", next_channel)
