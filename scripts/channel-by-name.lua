@@ -124,7 +124,7 @@ local function next_channel(first, last)
     local newch = mp.get_property_number("playlist-pos-1") + 1
     -- start from the first channel if new channel is over the last one
     if newch > lookup_name2num(last, tonumber(last)) then
-        return channel(first)
+        newch = lookup_name2num(first, tonumber(first))
     end
     -- log
     mp.msg.info("next_channel(" .. first .. ", ".. last .. ")  playlist-pos-1:" .. newch)
