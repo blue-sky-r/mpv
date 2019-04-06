@@ -15,6 +15,9 @@
 --   osd_range_msg  ... start range survey OSD msg (survey %t sec / range mode)
 --   osd_list_msg   ... start list  survey OSD msg (survey %t sec / list mode)
 --
+-- Requires:
+--   channel-by-name.lua [ channel(), next_channel() ]
+--
 -- To customize configuration place channel-survey.conf template into ~/.config/mpv/script-opts/ [~/.config/mpv/lua-settings/] and edit
 --
 -- Place script into ~/.config/mpv/scripts/ for autoload
@@ -23,7 +26,6 @@
 
 local options = require("mp.options")
 local utils   = require("mp.utils")
---require("channel-by-name")
 
 -- defaults
 local cfg = {
