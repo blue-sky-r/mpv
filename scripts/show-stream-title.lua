@@ -6,11 +6,17 @@
 -- (see mpv doc for more details, lookup playlist/N/current, playlist/N/playing )
 -- To display correct stream2.title from playlist use this script.
 --
+-- Note: 'force-media-title' property get updated also with empty value so
+-- testing for empty value is required before formatting and OSDing
+--
 -- Note: 'media-title' property gets updated more often then switching channels.
 -- Therefore the script has to validate the 'media-title', It is omplemented
 -- by 'media-title' matching to cfg.valid pattern. The empty cfg.valid activates
 -- 'passthrough' mode (all 'media-title' changes are valid and shown). The default
--- cfg.valid pattern should be OK, actually is based on SMPlayer fromatted playlist
+-- cfg.valid pattern should be OK, actually is based on SMPlayer formatted playlist
+--
+-- To customize configuration place show-stream-title.conf template into
+-- dir ~/.config/mpv/script-opts/ [~/.config/mpv/lua-settings/] and edit
 --
 -- Place script into ~/.config/mpv/scripts/ for autoload
 --
@@ -23,7 +29,7 @@
 -- GitHub: https://github.com/blue-sky-r/mpv/tree/master/scripts
 
 -- OSD format string tokens:
--- %N ... iPTV channel number (playlist index)
+-- %N ... iPTV channel number (playlist index 1-based)
 -- %t ... iPTV channel name (user friendly stream title)
 -- %T ... iPTV channel name in uppercase
 
@@ -57,27 +63,49 @@ end
 -- [cplayer] Set property: file-local-options/force-media-title="index" -> 1
 -- [show_stream_title] property 'media-title' changed to 'index'
 --
-mp.observe_property("media-title", "string",
-    function(name, val)
-        -- log
-        mp.msg.info("property '"..name.."' changed to '"..val.."'")
-        -- val can be url (redirects ?)
-        if not is_valid_title(val) then return end
 
-        -- SMPlayer playlist val = 'Title,,0'
-        --          playlist val = 'Title'
+-- string v is empty
+local function empty(v)
+    return not v or v == '' or string.find(v, "^%s*$")
+end
 
-        -- get comma position or entire length
-        local compos = string.find(val..",", ",")
-        -- stream title from val
-        local title = string.sub(val, 1, compos-1)
-        -- playlist index (0-based)
-        local n = 1 + mp.get_property('playlist-pos')
-        -- replace tokens
-        local txt = string.gsub(cfg.format, '%%N', n):gsub('%%t', title):gsub('%%T', string.upper(title))
+-- format and show OSD forced media title val if not empty
+local function force_media_title(name, val)
+    -- log
+    mp.msg.info("force_media_title(name:".. name ..", val:".. val ..")")
+    -- val can be empty
+    if empty(val) then return end
 
-        -- osd show
-        mp.osd_message(txt)
-    end
-)
+    -- playlist index (1-based)
+    local n = mp.get_property('playlist-pos-1')
+    -- replace tokens
+    local txt = string.gsub(cfg.format, '%%N', n):gsub('%%t', val):gsub('%%T', string.upper(val))
+
+    -- osd show
+    mp.osd_message(txt)
+end
+
+-- pass as force media title if media title val is valid
+local function media_title(name , val)
+    -- log
+    mp.msg.info("media_title(name:".. name ..", val:".. val ..")")
+    -- val can be url (redirects ?)
+    if not is_valid_title(val) then return end
+
+    -- SMPlayer playlist val = 'Title,,0'
+    --          playlist val = 'Title'
+
+    -- get comma position or entire length
+    local compos = string.find(val ..",", ",")
+    -- strip commas from stream title
+    local title = string.sub(val, 1, compos - 1)
+    -- osd
+    force_media_title(name, title)
+end
+
+-- observe media-title
+mp.observe_property("media-title", "string", media_title)
+
+-- observe force-meduia-title
+mp.observe_property("force-media-title", "string", force_media_title)
 
