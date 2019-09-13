@@ -1,11 +1,12 @@
--- YouTube hook with mask - slightly improved standard (built-in) ytdl_hook.lua
+-- YouTube hook with masks - slightly improved standard (built-in) ytdl_hook.lua
 --
--- Usefull for iPTV when redundant probing the stream can cause blocking
+-- Usefull for iPTV when redundant probing of the stream url can cause blocking
 --
--- Only the config options 'mask' has been added. Only when URL is matching the mask
--- the youtube-dl is processing url. This avoids double/multipre probing of url
+-- Only the config options 'masks' has been added. It holds space separated
+-- patterns to match against stream url. Even the partial URL match to any part of 'masks'
+-- will cause the youtube-dl to process the url. This avoids double/multipre probing of url
 -- which can cause blocking (like rapid channel switching hated) by iptv providers.
--- The dafult valus of try_ytdl_first=false is also modified to try_ytdl_first=true
+-- The default valus of try_ytdl_first=false is also modified to try_ytdl_first=true
 -- as to limit probing the url matching has to be done before trying to open it.
 -- Other options and functionality is just coopied from ytdl_hook.lua.
 --
@@ -22,7 +23,8 @@ local msg = require 'mp.msg'
 local options = require 'mp.options'
 
 local o = {
-    mask = "ytdl://www.youtube.com",
+    -- space separated patterns (only partial match with url is enough)
+    masks = "ytdl:// https?://www.youtube.com/ https?://youtu.be/",
     exclude = "",
     try_ytdl_first = true,
     use_manifests = false
@@ -679,11 +681,22 @@ end
 -- hook event is config dependent
 local event = o.try_ytdl_first and "on_load" or "on_load_fail"
 
+-- is url matching any pattern from cfg.masks
+local function is_ytdl(url)
+    for mask in o.masks:gmatch("%S+") do
+        if url:find(mask) ~= nil then
+            msg.debug('is_ytdl('.. url ..') is matching mask('.. mask ..')')
+            return true
+        end
+    end
+    return false
+end
+
 local function ytdl_hook()
     local url = mp.get_property("stream-open-filename", "")
     msg.verbose(event ..' hook for url = '.. url)
-    if not (url:find(o.mask) == 1) then
-        msg.verbose('no action - url is not matching mask = ' .. o.mask)
+    if not is_ytdl(url) then
+        msg.verbose('no action - url is not matching any mask = ' .. o.masks)
         return
     end
     if is_blacklisted(url) then
