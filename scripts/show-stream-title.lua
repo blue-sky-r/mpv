@@ -38,7 +38,9 @@ local cfg = {
     -- OSD text format
     format = "%N. %t",
     -- validate title from playlist (empty for passthrough = valid all)
-    valid  = "^.+,,0$"
+    valid  = "^.+,,0$",
+    -- ignore title matching filename property
+    ignorefilename = true
 }
 
 -- check if string is valid title by cfg.valid pattern
@@ -71,10 +73,15 @@ end
 
 -- format and show OSD forced media title val if not empty
 local function force_media_title(name, val)
+    -- currently played filename
+    local filename = mp.get_property('filename/no-ext', '')
     -- log
-    mp.msg.info("force_media_title(name:".. name ..", val:".. val ..")")
+    mp.msg.info("force_media_title(name:".. name ..", val:".. val ..") filename:".. filename)
     -- val can be empty
     if empty(val) then return end
+
+    -- optional ignore filename
+    if cfg.ignorefilename and filename:find(val, 1, true) == 1 then return end
 
     -- playlist index (1-based)
     local n = mp.get_property('playlist-pos-1')
