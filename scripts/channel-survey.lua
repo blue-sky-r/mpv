@@ -18,7 +18,8 @@
 -- Requires:
 --   channel-by-name.lua [ channel(), next_channel() ]
 --
--- To customize configuration place channel-survey.conf template into ~/.config/mpv/script-opts/ [~/.config/mpv/lua-settings/] and edit
+-- To customize configuration place channel-survey.conf template into
+-- dir ~/.config/mpv/script-opts/ [~/.config/mpv/lua-settings/] and edit
 --
 -- Place script into ~/.config/mpv/scripts/ for autoload
 --
