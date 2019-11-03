@@ -6,11 +6,25 @@
 -- Instead of always keeping playlist and input.conf synchronized we can select channel by name (title)
 -- and let the script to find correct position in the playlist (index) and switch to required stream.
 -- The script builds up local lookup table (dictionary) name2num.channels -> channel_number (playlist position)
+--
+-- Match:
+-- The pattern for matching channel name is defined in cfg.match (defaults to case insebsitive string equality.
+--
+-- Duplicates:
+-- Duplicate entries (different channels having the matching names) are handled depending on cfg.duplicates.
+-- The default value of cfg.duplicates = 1 means that only the first entry is used. This is the most logical solution
+-- to duplicate entries if all matching names are subsequently ordered in the playlist following each other.
+-- In this case the first entry is used and in case of stream interruption the mpv switches to next entry
+-- (which is the same channel name, just from different source). The value of cfg.duplicaes = -1 means the last entry
+-- is used as it might be required in some special cases (any other value of cfg.duplicates than 1 is handled as -1).
+--
+-- Refresh:
 -- To detect playlist changes it observes playlist-count property and compares the new value to the size of name2num
--- table/dictionary. As Lua language does not support length/sizeof for tables the name2num size is also
+-- table/dictionary. As Lua language does not support length/sizeof for tables so the name2num size is also
 -- kept locally in name2num.count for performance reasons. This playlist changes detection would fail if you
 -- load the new playlist with exactly the same number of entries as the previous playlist has. In such a cases
 -- simply set config option cfg.forcerefresh to true. This will force refresh even if the playlist size is the same.
+--
 -- Can also be used for alternate way to switch channels like voice recognition, web page etc.
 --
 -- Configurable options:
@@ -49,7 +63,9 @@ local cfg = {
     -- S   ... case sensitive string equality
 	match    = "s",
     -- refresh channel lookup table on each playlist-count change
-    forcerefresh  = false
+    forcerefresh  = false,
+    -- duplicate entries handling: 1 = take the 1st (default), -1 = take the last
+    duplicates = 1
 }
 
 -- read optional lua-settings/channel-by-name.conf
@@ -155,7 +171,7 @@ local function refresh_name2num(playlist)
     -- do not refresh if there is no title for whatever reason
     if not playlist[1].title then return end
 
-    -- init table
+    -- init global table
     name2num = {
         channels = {},
         count = 0
@@ -163,16 +179,19 @@ local function refresh_name2num(playlist)
 
     for chnum,val in ipairs(playlist) do
         mp.msg.verbose("refresh_name2num() channel num:".. chnum .." -> ".. utils.to_string(val))
-        -- break if there is no title
+        -- break if there is no title (broken playlist)
         if not val.title then return end
         -- channel name from playlist title
         local chname = title2name(val.title)
         -- adjust case
         if case_insensitive then chname = chname:lower() end
-        -- add to dictionary
-        name2num.channels[chname] = chnum
         -- count
         name2num.count = name2num.count + 1
+        -- add to dictionary only if not already there or cfg.duplicates
+        if not name2num.channels[chname] or cfg.duplicates ~= 1 then
+            -- add to dictionary
+            name2num.channels[chname] = chnum
+        end
     end
 
     mp.msg.info("refresh_name2num() name2num = ".. utils.to_string(name2num))
