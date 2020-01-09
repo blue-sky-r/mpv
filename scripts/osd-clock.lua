@@ -1,6 +1,6 @@
 -- Show OSD clock
 --
--- Shows OSD sclock periodicaly with many configurable options,
+-- Shows OSD clock periodicaly with many configurable options,
 -- OSD options like duration, alignment, border, scale could be set in ~/.config/mpv/mpv.conf
 -- OSD-clock configurable options:
 --   interval ... how often to show OSD clock, either seconds or human friendly format like '1h 33m 5s' is supported (default '15m')
