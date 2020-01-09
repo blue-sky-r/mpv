@@ -8,7 +8,7 @@
 -- OSD-CLOCK - periodicaly shows the clock - configurable options:
 -- =========
 --   interval ... how often to show OSD clock, either seconds or human friendly format like '1h 33m 5s' supported
---   format   ... date format string
+--   format   ... os.date format string for OSD clock
 --   duration ... how long [in seconds] OSD msg stays, fractional values supported
 --   key      ... to bind showing OSD clock on request (false for no binding)
 --
