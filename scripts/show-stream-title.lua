@@ -33,6 +33,9 @@
 -- %t ... iPTV channel name (user friendly stream title)
 -- %T ... iPTV channel name in uppercase
 
+local options = require("mp.options")
+local utils = require("mp.utils")
+
 -- defaults
 local cfg = {
     -- OSD text format
@@ -43,12 +46,25 @@ local cfg = {
     ignorefilename = true
 }
 
+-- read lua-settings/show-stream-title.conf
+options.read_options(cfg, 'show-stream-title')
+
+-- log active config
+mp.msg.verbose('cfg = '..utils.to_string(cfg))
+
+-- string v is empty
+local function empty(v)
+    return not v or v == '' or string.find(v, "^%s*$")
+end
+
 -- check if string is valid title by cfg.valid pattern
 -- valid:   'CP24,,0', 'TA News,,0'
 -- invalid: 'index', 'DVR', 'iptv-streams.m3u8', 'rtmp://ip'
 local function is_valid_title(s)
     -- everything is valid (passthrough) if validation pattern is missing
     if not cfg.valid then return true end
+    -- empty (nil) is invalid
+    if empty(s) then return false end
     -- validate with pattern
     return string.match(s, cfg.valid)
 end
@@ -65,11 +81,6 @@ end
 -- [cplayer] Set property: file-local-options/force-media-title="index" -> 1
 -- [show_stream_title] property 'media-title' changed to 'index'
 --
-
--- string v is empty
-local function empty(v)
-    return not v or v == '' or string.find(v, "^%s*$")
-end
 
 -- format and show OSD forced media title val if not empty
 local function force_media_title(name, val)
@@ -93,9 +104,9 @@ local function force_media_title(name, val)
 end
 
 -- pass as force media title if media title val is valid
-local function media_title(name , val)
+local function media_title(name, val)
     -- log
-    mp.msg.info("media_title(name:".. name ..", val:".. val ..")")
+    mp.msg.info("media_title(name:".. name ..", val:".. utils.to_string(val) ..")")
     -- val can be url (redirects ?)
     if not is_valid_title(val) then return end
 
