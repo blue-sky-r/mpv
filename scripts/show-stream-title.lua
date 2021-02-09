@@ -6,6 +6,10 @@
 -- (see mpv doc for more details, lookup playlist/N/current, playlist/N/playing )
 -- To display correct stream2.title from playlist use this script.
 --
+-- Note: Optional stream specific mpv properties can be set in the second comma separated section.
+-- For example to activate subtitles id 1 and audio id 2 for "Film Europe" use playlist line:
+-- #EXTINF:0,Film Europe,sid="1" aid="3",0
+--
 -- Note: 'force-media-title' property get updated also with empty value so
 -- testing for empty value is required before formatting and OSDing
 --
@@ -41,7 +45,7 @@ local cfg = {
     -- OSD text format
     format = "%N. %t",
     -- validate title from playlist (empty for passthrough = valid all)
-    valid  = "^.+,,0$",
+    valid  = "^.+,.*,0$",
     -- ignore title matching filename property
     ignorefilename = true
 }
@@ -50,11 +54,27 @@ local cfg = {
 options.read_options(cfg, 'show-stream-title')
 
 -- log active config
-mp.msg.verbose('cfg = '..utils.to_string(cfg))
+mp.msg.verbose('cfg = '.. utils.to_string(cfg))
 
 -- string v is empty
 local function empty(v)
     return not v or v == '' or string.find(v, "^%s*$")
+end
+
+-- key,val iterator from string key1="val1" key2="val2"
+local function key_val_iter(s)
+    -- start idx
+    local idx = 0
+    -- closure
+    return function()
+        -- extract key,val from string key="val"
+        _, idx, key, val = string.find(s, '([%w-]+)="([^"]+)"', idx)
+        -- return found key/val
+        if idx then
+            mp.msg.verbose("found key(".. key ..") = val(".. val ..") at idx:".. idx)
+            return key, val
+        end
+    end
 end
 
 -- check if string is valid title by cfg.valid pattern
@@ -112,6 +132,12 @@ local function media_title(name, val)
 
     -- SMPlayer playlist val = 'Title,,0'
     --          playlist val = 'Title'
+
+    -- set custom stream options
+    for pname,pval in key_val_iter(val) do
+        mp.msg.info("set_property(".. pname ..", ".. pval ..")")
+        mp.set_property(pname, pval)
+    end
 
     -- get comma position or entire length
     local compos = string.find(val ..",", ",")
